@@ -22,20 +22,17 @@ import de.digitalistbesser.diff.DiffAlgorithm
   * remaining data as discussed on https://neil.fraser.name/writing/diff/.
   */
 trait CommonPrefix[TData, TElement]
-  extends DiffAlgorithm[TData, TElement] {
-  self =>
-
+  extends DiffAlgorithm[TData, TElement] { self =>
   /** Determines the length of the common suffix by running a linear search at the start of the source and target
     * sequences before calling the base implementation.
     */
   override abstract def computeDifferences(
       source: Seq[TElement],
       target: Seq[TElement]): Seq[Difference] = {
-    val eq = implicitly[Equiv[TElement]]
     var length = 0
     while (length < source.length &&
         length < target.length &&
-        eq.equiv(source(length), target(length))) {
+        this.equiv.equiv(source(length), target(length))) {
       length = length + 1
     }
 

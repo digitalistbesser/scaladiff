@@ -24,22 +24,20 @@ import scala.collection._
   *
   * @see http://onlinelibrary.wiley.com/doi/10.1002/spe.4380151102/abstract
   */
-class MillerMyersDiffAlgorithm[TData, TElement : Equiv](implicit
-    asSeq: AsSeq[TData, TElement])
+class MillerMyersDiffAlgorithm[TData, TElement](implicit
+    asSeq: AsSeq[TData, TElement],
+    equiv: Equiv[TElement])
   extends DiffAlgorithm[TData, TElement] {
   /** @inheritdoc
     */
   protected def computeDifferences(
       source: Seq[TElement],
       target: Seq[TElement]): Seq[Difference] = {
-    val eq = implicitly[Equiv[TElement]]
-    import eq.equiv
-
     // initialize from identical prefixes
     val maxRow = source.length
     val maxColumn = target.length
     var row = 0
-    while (row < maxRow && row < maxColumn && equiv(source(row), target(row))) {
+    while (row < maxRow && row < maxColumn && this.equiv.equiv(source(row), target(row))) {
       row = row + 1
     }
 
@@ -63,7 +61,7 @@ class MillerMyersDiffAlgorithm[TData, TElement : Equiv](implicit
 
           // check identical sub-sequence on current diagonal
           var column = row + offset
-          while (row < maxRow && column < maxColumn && equiv(source(row), target(column))) {
+          while (row < maxRow && column < maxColumn && this.equiv.equiv(source(row), target(column))) {
             row = row + 1
             column = column + 1
           }

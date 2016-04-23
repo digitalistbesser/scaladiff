@@ -21,9 +21,10 @@ import scala.collection.mutable
 
 /** Defines a patch algorithm.
   */
-class PatchAlgorithm[TData, TElement : Equiv](implicit
-    asSeq: AsSeq[TData, TElement],
-    asData: AsData[TData, TElement]) {
+class PatchAlgorithm[TData, TElement](implicit
+    protected val asSeq: AsSeq[TData, TElement],
+    protected val asData: AsData[TData, TElement],
+    protected val equiv: Equiv[TElement]) {
   /** Applies the specified hunks to the data.
     *
     * @param data The source data.
@@ -74,7 +75,7 @@ class PatchAlgorithm[TData, TElement : Equiv](implicit
         hunks: Seq[Hunk[TElement]],
         offset: Int,
         builder: mutable.Builder[TElement, TData],
-        results: mutable.Builder[(Hunk[TElement], HunkResult), Map[Hunk[TElement], HunkResult]]): Unit = hunks match {
+        results: mutable.Builder[(Hunk[TElement], HunkResult), Map[Hunk[TElement], HunkResult]]): PatchResult[TData, TElement] = hunks match {
       case Seq(h @ Hunk(s, _, e), ht @ _*) =>
         val length = this.computeOffset(seq, e, s + offset)
           .map { o =>
@@ -100,12 +101,11 @@ class PatchAlgorithm[TData, TElement : Equiv](implicit
 
       case _ =>
         builder ++= seq
+
+        PatchResult(builder.result(), results.result())
     }
 
-    val builder = dataBuilder[TData, TElement]
-    val results = Map.newBuilder[Hunk[TElement], HunkResult]
-    loop(seq, hunks, 0, builder, results)
-    PatchResult(builder.result(), results.result())
+    loop(seq, hunks, 0, dataBuilder[TData, TElement], Map.newBuilder[Hunk[TElement], HunkResult])
   }
 
   /** Computes the offset of the specified edits in the sequence.

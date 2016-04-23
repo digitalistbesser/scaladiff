@@ -24,46 +24,59 @@ import org.scalatest._
   */
 class PatchAlgorithmSpec
   extends FunSuite {
-  private val patchAlgorithm = new PatchAlgorithm[String, Char]
-  private val combinations = Map(
-    "abc" -> List.empty[Hunk[Char]],
-    "Abc" -> List(Hunk(0, 0, List(Delete('a'), Insert('A')))),
-    "aBc" -> List(Hunk(1, 1, List(Delete('b'), Insert('B')))),
-    "abC" -> List(Hunk(2, 2, List(Delete('c'), Insert('C')))),
-    "ABc" -> List(Hunk(0, 0, List(Delete('a'), Delete('b'), Insert('A'), Insert('B')))),
-    "AbC" -> List(Hunk(0, 0, List(Delete('a'), Insert('A'))), Hunk(2, 2, List(Delete('c'), Insert('C')))),
-    "aBC" -> List(Hunk(1, 1, List(Delete('b'), Delete('c'), Insert('B'), Insert('C')))),
-    "ABC" -> List(Hunk(0, 0, List(Delete('a'), Delete('b'), Delete('c'), Insert('A'), Insert('B'), Insert('C')))),
-    "bc" -> List(Hunk(0, 0, List(Delete('a')))),
-    "ac" -> List(Hunk(1, 1, List(Delete('b')))),
-    "ab" -> List(Hunk(2, 2, List(Delete('c')))),
-    "c" -> List(Hunk(0, 0, List(Delete('a'), Delete('b')))),
-    "b" -> List(Hunk(0, 0, List(Delete('a'))), Hunk(2, 2, List(Delete('c')))),
-    "a" -> List(Hunk(1, 1, List(Delete('b'), Delete('c')))),
-    "" -> List(Hunk(0, 0, List(Delete('a'), Delete('b'), Delete('c')))),
-    " abc" -> List(Hunk(0, 0, List(Insert(' ')))),
-    "abc " -> List(Hunk(3, 3, List(Insert(' ')))),
-    " abc " -> List(Hunk(0, 0, List(Insert(' '))), Hunk(3, 4, List(Insert(' ')))),
-    "ab c" -> List(Hunk(2, 2, List(Insert(' ')))),
-    "a bc" -> List(Hunk(1, 1, List(Insert(' ')))),
-    "a b c" -> List(Hunk(1, 1, List(Insert(' '))), Hunk(2, 3, List(Insert(' ')))),
-    " a b c " -> List(Hunk(0, 0, List(Insert(' '))), Hunk(1, 2, List(Insert(' '))), Hunk(2, 4, List(Insert(' '))), Hunk(3, 6, List(Insert(' ')))),
-    " ac" -> List(Hunk(0, 0, List(Insert(' '))), Hunk(1, 2, List(Delete('b')))),
-    "ac " -> List(Hunk(1, 1, List(Delete('b'))), Hunk(3, 2, List(Insert(' ')))),
-    " ac " -> List(Hunk(0, 0, List(Insert(' '))), Hunk(1, 2, List(Delete('b'))), Hunk(3, 3, List(Insert(' ')))),
-    " a c" -> List(Hunk(0, 0, List(Insert(' '))), Hunk(1, 2, List(Delete('b'), Insert(' ')))),
-    "a c " -> List(Hunk(1, 1, List(Delete('b'), Insert(' '))), Hunk(3, 3, List(Insert(' '))))
+  private val combinations = List(
+    SourceTargetCombination("abc", "abc", Seq.empty[Hunk[Char]]),
+    SourceTargetCombination("abc", "Abc", Seq(Hunk(0, 0, Seq(Delete('a'), Insert('A'))))),
+    SourceTargetCombination("abc", "aBc", Seq(Hunk(1, 1, Seq(Delete('b'), Insert('B'))))),
+    SourceTargetCombination("abc", "abC", Seq(Hunk(2, 2, Seq(Delete('c'), Insert('C'))))),
+    SourceTargetCombination("abc", "ABc", Seq(Hunk(0, 0, Seq(Delete('a'), Delete('b'), Insert('A'), Insert('B'))))),
+    SourceTargetCombination("abc", "AbC", Seq(Hunk(0, 0, Seq(Delete('a'), Insert('A'))), Hunk(2, 2, Seq(Delete('c'), Insert('C'))))),
+    SourceTargetCombination("abc", "aBC", Seq(Hunk(1, 1, Seq(Delete('b'), Delete('c'), Insert('B'), Insert('C'))))),
+    SourceTargetCombination("abc", "ABC", Seq(Hunk(0, 0, Seq(Delete('a'), Delete('b'), Delete('c'), Insert('A'), Insert('B'), Insert('C'))))),
+    SourceTargetCombination("abc", "bc", Seq(Hunk(0, 0, Seq(Delete('a'))))),
+    SourceTargetCombination("abc", "ac", Seq(Hunk(1, 1, Seq(Delete('b'))))),
+    SourceTargetCombination("abc", "ab", Seq(Hunk(2, 2, Seq(Delete('c'))))),
+    SourceTargetCombination("abc", "c", Seq(Hunk(0, 0, Seq(Delete('a'), Delete('b'))))),
+    SourceTargetCombination("abc", "b", Seq(Hunk(0, 0, Seq(Delete('a'))), Hunk(2, 2, Seq(Delete('c'))))),
+    SourceTargetCombination("abc", "a", Seq(Hunk(1, 1, Seq(Delete('b'), Delete('c'))))),
+    SourceTargetCombination("abc", "", Seq(Hunk(0, 0, Seq(Delete('a'), Delete('b'), Delete('c'))))),
+    SourceTargetCombination("abc", " abc", Seq(Hunk(0, 0, Seq(Insert(' '))))),
+    SourceTargetCombination("abc", "abc ", Seq(Hunk(3, 3, Seq(Insert(' '))))),
+    SourceTargetCombination("abc", " abc ", Seq(Hunk(0, 0, Seq(Insert(' '))), Hunk(3, 4, Seq(Insert(' '))))),
+    SourceTargetCombination("abc", "ab c", Seq(Hunk(2, 2, Seq(Insert(' '))))),
+    SourceTargetCombination("abc", "a bc", Seq(Hunk(1, 1, Seq(Insert(' '))))),
+    SourceTargetCombination("abc", "a b c", Seq(Hunk(1, 1, Seq(Insert(' '))), Hunk(2, 3, Seq(Insert(' '))))),
+    SourceTargetCombination("abc", " a b c ", Seq(Hunk(0, 0, Seq(Insert(' '))), Hunk(1, 2, Seq(Insert(' '))), Hunk(2, 4, Seq(Insert(' '))), Hunk(3, 6, Seq(Insert(' '))))),
+    SourceTargetCombination("abc", " ac", Seq(Hunk(0, 0, Seq(Insert(' '))), Hunk(1, 2, Seq(Delete('b'))))),
+    SourceTargetCombination("abc", "ac ", Seq(Hunk(1, 1, Seq(Delete('b'))), Hunk(3, 2, Seq(Insert(' '))))),
+    SourceTargetCombination("abc", " ac ", Seq(Hunk(0, 0, Seq(Insert(' '))), Hunk(1, 2, Seq(Delete('b'))), Hunk(3, 3, Seq(Insert(' '))))),
+    SourceTargetCombination("abc", " a c", Seq(Hunk(0, 0, Seq(Insert(' '))), Hunk(1, 2, Seq(Delete('b'), Insert(' '))))),
+    SourceTargetCombination("abc", "a c ", Seq(Hunk(1, 1, Seq(Delete('b'), Insert(' '))), Hunk(3, 3, Seq(Insert(' '))))),
+    SourceTargetCombination("abc", "bc", Seq(Hunk(0, 0, Seq(Delete('a'), Match('b'), Match('c'))))),
+    SourceTargetCombination("abc", "ac", Seq(Hunk(0, 0, Seq(Match('a'), Delete('b'), Match('c'))))),
+    SourceTargetCombination("abc", "ab", Seq(Hunk(0, 0, Seq(Match('a'), Match('b'), Delete('c'))))),
+    SourceTargetCombination("abc", "c", Seq(Hunk(0, 0, Seq(Delete('a'), Delete('b'), Match('c'))))),
+    SourceTargetCombination("abc", "b", Seq(Hunk(0, 0, Seq(Delete('a'), Match('b'), Delete('c'))))),
+    SourceTargetCombination("abc", "a", Seq(Hunk(0, 0, Seq(Match('a'), Delete('b'), Delete('c')))))
   )
+  private val patchAlgorithm = new PatchAlgorithm[String, Char]
 
-  this.combinations.foreach { case (target, hunks) =>
+  /** A combination of a source and a target value.
+    */
+  private case class SourceTargetCombination(
+      source: String,
+      target: String,
+      hunks: Seq[Hunk[Char]])
+
+  this.combinations.foreach { case SourceTargetCombination(source, target, hunks) =>
     def assertAllHunksApplied(
         hunks: Seq[Hunk[Char]],
         results: Map[Hunk[Char], HunkResult]): Unit = hunks.foreach { h =>
       assert(results.getOrElse(h, fail()) == Applied(h.sourceIndex))
     }
 
-    test(s"${patchAlgorithm.getClass.getSimpleName} should yield '$target' for patching 'abc' with $hunks") {
-      val result = this.patchAlgorithm.patch("abc", hunks)
+    test(s"${patchAlgorithm.getClass.getSimpleName} should yield '$target' for patching '$source' with $hunks") {
+      val result = this.patchAlgorithm.patch(source, hunks)
       inside(result) { case PatchResult(d, m) =>
         d should equal (target)
         assertAllHunksApplied(hunks, m)
@@ -71,16 +84,17 @@ class PatchAlgorithmSpec
     }
   }
 
-  this.combinations.foreach { case (target, hunks) =>
+  this.combinations.foreach { case SourceTargetCombination(source, target, hunks) =>
     def assertAllHunksUnapplied(
         hunks: Seq[Hunk[Char]],
         results: Map[Hunk[Char], HunkResult]): Unit = hunks.foreach { h =>
       assert(results.getOrElse(h, fail()) == Applied(h.targetIndex))
     }
 
-    test(s"${patchAlgorithm.getClass.getSimpleName} should yield 'abc' for unpatching '$target' with $hunks") {
+    test(s"${patchAlgorithm.getClass.getSimpleName} should yield '$source' for unpatching '$target' with $hunks") {
       val result = this.patchAlgorithm.unpatch(target, hunks)
-      inside(result) { case PatchResult("abc", m) =>
+      inside(result) { case PatchResult(s, m) =>
+        s should equal (source)
         assertAllHunksUnapplied(hunks, m)
       }
     }

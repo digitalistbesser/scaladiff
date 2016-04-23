@@ -20,8 +20,9 @@ import scala.annotation.tailrec
 
 /** Defines a diff algorithm.
  */
-abstract class DiffAlgorithm[TData, TElement : Equiv](implicit
-    asSeq: AsSeq[TData, TElement]) {
+abstract class DiffAlgorithm[TData, TElement](implicit
+    protected val asSeq: AsSeq[TData, TElement],
+    protected val equiv: Equiv[TElement]) {
   /** Denotes a difference between the source and the target.
     */
   protected abstract sealed class Difference
