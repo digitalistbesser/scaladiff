@@ -22,9 +22,9 @@ import scala.language.higherKinds
 /** Provides utilities for diffing data.
   */
 trait Diff {
-  /** @return The default diff algorithm implementation used with this instance.
+  /** @return The diff algorithm implementation used with this instance.
     */
-  protected def defaultDiffAlgorithm[TData, TElement : Equiv](implicit
+  protected def diffAlgorithm[TData, TElement : Equiv](implicit
       asSeq: AsSeq[TData, TElement]): DiffAlgorithm[TData, TElement]
 
   /** Wrapper class for diff operations on strings.
@@ -32,9 +32,7 @@ trait Diff {
   implicit class StringDiffOps(source: String) {
     /** Computes the diff between the source and the target strings.
       */
-    def diffTo(
-        target: String)(implicit
-        algorithm: DiffAlgorithm[String, Char] = defaultDiffAlgorithm[String, Char]): Seq[Hunk[Char]] = algorithm.diff(source, target)
+    def diffTo(target: String): Seq[Hunk[Char]] = diffAlgorithm[String, Char].diff(source, target)
   }
 
   /** Wrapper class for diff operations on sequences.
@@ -47,8 +45,6 @@ trait Diff {
       asData: AsData[TSeq[TElement], TElement]) {
     /** Computes the diff between the source and the target sequences.
       */
-    def diffTo(
-        target: TSeq[TElement])(implicit
-        algorithm: DiffAlgorithm[TSeq[TElement], TElement] = defaultDiffAlgorithm[TSeq[TElement], TElement]): Seq[Hunk[TElement]] = algorithm.diff(source, target)
+    def diffTo(target: TSeq[TElement]): Seq[Hunk[TElement]] = diffAlgorithm[TSeq[TElement], TElement].diff(source, target)
   }
 }

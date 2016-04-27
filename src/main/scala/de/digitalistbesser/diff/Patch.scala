@@ -22,11 +22,23 @@ import scala.language.higherKinds
 /** Provides utilities for patching data.
   */
 trait Patch {
-  /** @return The default patch algorithm implementation used with this instance.
+  /** @return The patch algorithm implementation used with this instance.
     */
-  protected def defaultPatchAlgorithm[TData, TElement : Equiv](implicit
+  protected def patchAlgorithm[TData, TElement : Equiv](implicit
       asSeq: AsSeq[TData, TElement],
       asData: AsData[TData, TElement]): PatchAlgorithm[TData, TElement]
+
+  /** Wrapper class for patch operations on strings.
+    */
+  implicit class StringPatchOps(value: String) {
+    /** Applies the specified hunks to the string.
+      */
+    def patchWith(hunks: Seq[Hunk[Char]]): PatchResult[String, Char] = patchAlgorithm[String, Char].patch(value, hunks)
+
+    /** Unapplies the specified hunks from the string.
+      */
+    def unpatchWith(hunks: Seq[Hunk[Char]]): PatchResult[String, Char] = patchAlgorithm[String, Char].unpatch(value, hunks)
+  }
 
   /** Wrapper class for patch operations on sequences.
     *
@@ -38,30 +50,10 @@ trait Patch {
       asData: AsData[TSeq[TElement], TElement]) {
     /** Applies the specified hunks to the sequence.
       */
-    def patchWith(
-        hunks: Seq[Hunk[TElement]])(implicit
-        algorithm: PatchAlgorithm[TSeq[TElement], TElement] = defaultPatchAlgorithm[TSeq[TElement], TElement]): PatchResult[TSeq[TElement], TElement] = algorithm.patch(seq, hunks)
+    def patchWith(hunks: Seq[Hunk[TElement]]): PatchResult[TSeq[TElement], TElement] = patchAlgorithm[TSeq[TElement], TElement].patch(seq, hunks)
 
     /** Unapplies the specified hunks from the sequence.
       */
-    def unpatchWith(
-        hunks: Seq[Hunk[TElement]])(implicit
-        algorithm: PatchAlgorithm[TSeq[TElement], TElement] = defaultPatchAlgorithm[TSeq[TElement], TElement]): PatchResult[TSeq[TElement], TElement] = algorithm.unpatch(seq, hunks)
-  }
-
-  /** Wrapper class for patch operations on strings.
-    */
-  implicit class StringPatchOps(value: String) {
-    /** Applies the specified hunks to the string.
-      */
-    def patchWith(
-        hunks: Seq[Hunk[Char]])(implicit
-        algorithm: PatchAlgorithm[String, Char] = defaultPatchAlgorithm[String, Char]): PatchResult[String, Char] = algorithm.patch(value, hunks)
-
-    /** Unapplies the specified hunks from the string.
-      */
-    def unpatchWith(
-        hunks: Seq[Hunk[Char]])(implicit
-        algorithm: PatchAlgorithm[String, Char] = defaultPatchAlgorithm[String, Char]): PatchResult[String, Char] = algorithm.unpatch(value, hunks)
+    def unpatchWith(hunks: Seq[Hunk[TElement]]): PatchResult[TSeq[TElement], TElement] = patchAlgorithm[TSeq[TElement], TElement].unpatch(seq, hunks)
   }
 }

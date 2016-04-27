@@ -20,17 +20,28 @@ import org.scalatest._
 
 /** Basic spec for diff algorithm implementations.
   */
-abstract class DiffAlgorithmSpec(val diffAlgorithm: DiffAlgorithm[List[String], String])
+abstract class DiffAlgorithmSpec
   extends FlatSpec {
+  /** Creates an instance of the diff algorithm under test.
+    */
+  protected def diffAlgorithm(implicit
+      equiv: Equiv[String]): DiffAlgorithm[List[String], String]
+
   diffAlgorithm.getClass.getSimpleName should "provide an empty list of hunks for empty inputs" in {
     val input: List[String] = Nil
     val hunks = this.diffAlgorithm.diff(input, input)
     assert(hunks.isEmpty)
   }
-
   it should "provide an empty list of hunks for identical inputs" in {
     val input = "abc" :: "123" :: Nil
     val hunks = this.diffAlgorithm.diff(input, input)
+    assert(hunks.isEmpty)
+  }
+  it should "use the supplied Equiv instance to match the source and target elements" in {
+    implicit val equiv = Equiv.fromFunction[String]((l, r) => l.toLowerCase == r.toLowerCase)
+    val source = "abc" :: "XYZ" :: Nil
+    val target = "ABC" :: "XyZ" :: Nil
+    val hunks = this.diffAlgorithm.diff(source, target)
     assert(hunks.isEmpty)
   }
 }

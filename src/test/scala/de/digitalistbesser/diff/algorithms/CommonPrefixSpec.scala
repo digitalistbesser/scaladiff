@@ -27,7 +27,8 @@ class CommonPrefixSpec
     */
   private class DummyDiffAlgorithm(
       expectedSource: Seq[Char],
-      expectedTarget: Seq[Char])
+      expectedTarget: Seq[Char])(implicit
+      equiv: Equiv[Char])
     extends DiffAlgorithm[String, Char] {
     /** Checks the the supplied sequences against the expected ones.
       */
@@ -48,5 +49,10 @@ class CommonPrefixSpec
   it should "strip common elements from the start of both inputs" in {
     val diffAlgorithm = new DummyDiffAlgorithm("abcde", "xyz") with CommonPrefix[String, Char]
     diffAlgorithm.diff("123 abcde", "123 xyz")
+  }
+  it should "use the supplied Equiv instance to match the source and target elements" in {
+    implicit val equiv = Equiv.fromFunction[Char]((l, r) => l.toLower == r.toLower)
+    val diffAlgorithm = new DummyDiffAlgorithm("abcde", "xyz") with CommonPrefix[String, Char]
+    diffAlgorithm.diff("aBc abcde", "abC xyz")
   }
 }

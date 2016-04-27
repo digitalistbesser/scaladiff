@@ -23,7 +23,12 @@ import org.scalatest.Matchers._
 /** Spec implementation for the Miller, Myers diff implementation.
   */
 class MillerMyersDiffAlgorithmSpec
-  extends DiffAlgorithmSpec(new MillerMyersDiffAlgorithm[List[String], String]) {
+  extends DiffAlgorithmSpec {
+  /** Creates an instance of the diff algorithm under test.
+    */
+  protected def diffAlgorithm(implicit
+      equiv: Equiv[String]): DiffAlgorithm[List[String], String] = new MillerMyersDiffAlgorithm[List[String], String]
+
   it should "provide an insertion for a target with an additional entry" in {
     val source = "abc" :: "123" :: Nil
 
