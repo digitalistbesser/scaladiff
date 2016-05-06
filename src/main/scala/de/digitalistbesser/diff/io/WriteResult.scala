@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package de.digitalistbesser.diff
+package de.digitalistbesser.diff.io
 
-/** Provides result information on a processed hunk.
+/** The result of a write operation.
   */
-abstract sealed class HunkResult
+abstract sealed class WriteResult
 
-/** Denotes a hunk that was successfully applied to the target data.
+/** A successful write.
+  */
+case object WriteSuccess extends WriteResult
+
+/** A failed write.
   *
-  * @param index The index at which the hunk has been applied.
+  * @param exception The exception that lead to the failure.
   */
-case class Applied(index: Int) extends HunkResult
-
-/** Denotes a hunk that was rejected and not applied to the target data.
-  */
-case object Rejected extends HunkResult
+case class WriteFailure(exception: Throwable) extends WriteResult

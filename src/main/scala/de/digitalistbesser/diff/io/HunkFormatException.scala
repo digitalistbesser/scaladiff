@@ -14,18 +14,10 @@
  * limitations under the License.
  */
 
-package de.digitalistbesser.diff
+package de.digitalistbesser.diff.io
 
-/** Provides result information on a processed hunk.
+/** Thrown when an input is malformed.
   */
-abstract sealed class HunkResult
-
-/** Denotes a hunk that was successfully applied to the target data.
-  *
-  * @param index The index at which the hunk has been applied.
-  */
-case class Applied(index: Int) extends HunkResult
-
-/** Denotes a hunk that was rejected and not applied to the target data.
-  */
-case object Rejected extends HunkResult
+class HunkFormatException(
+    message: String,
+    cause: Throwable = null) extends RuntimeException(message, cause)

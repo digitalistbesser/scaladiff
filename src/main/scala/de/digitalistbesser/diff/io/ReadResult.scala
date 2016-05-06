@@ -14,18 +14,23 @@
  * limitations under the License.
  */
 
-package de.digitalistbesser.diff
+package de.digitalistbesser.diff.io
 
-/** Provides result information on a processed hunk.
-  */
-abstract sealed class HunkResult
+/** The result of a read operation.
+ */
+abstract sealed class ReadResult[+TResult, +TPosition <: Position]
 
-/** Denotes a hunk that was successfully applied to the target data.
+/** A successful read.
   *
-  * @param index The index at which the hunk has been applied.
-  */
-case class Applied(index: Int) extends HunkResult
+  * @param result The read result.
+ */
+case class ReadSuccess[TResult](result: TResult) extends ReadResult[TResult, Nothing]
 
-/** Denotes a hunk that was rejected and not applied to the target data.
+/** A failed read.
+  *
+  * @param exception The exception that lead to the failure.
+  * @param position The current read position if available.
   */
-case object Rejected extends HunkResult
+case class ReadFailure[TPosition <: Position](
+    exception: Throwable,
+    position: Option[TPosition]) extends ReadResult[Nothing, TPosition]

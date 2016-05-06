@@ -14,18 +14,8 @@
  * limitations under the License.
  */
 
-package de.digitalistbesser.diff
+package de.digitalistbesser.diff.io
 
-/** Provides result information on a processed hunk.
+/** Denotes a position in some data.
   */
-abstract sealed class HunkResult
-
-/** Denotes a hunk that was successfully applied to the target data.
-  *
-  * @param index The index at which the hunk has been applied.
-  */
-case class Applied(index: Int) extends HunkResult
-
-/** Denotes a hunk that was rejected and not applied to the target data.
-  */
-case object Rejected extends HunkResult
+abstract class Position

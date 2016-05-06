@@ -94,7 +94,7 @@ class PatchAlgorithm[TData, TElement](implicit
             o + h.sourceLength
           }
           .getOrElse {
-            results += ((h, Skipped))
+            results += ((h, Rejected))
             0
           }
         loop(seq.drop(length), ht, offset - length, builder, results)

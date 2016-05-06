@@ -16,16 +16,17 @@
 
 package de.digitalistbesser.diff
 
-/** Provides result information on a processed hunk.
-  */
-abstract sealed class HunkResult
+package object io {
+  /** Converts an element into the specified output format.
+    */
+  type ToOutput[TElement, TOut] = TElement => TOut
 
-/** Denotes a hunk that was successfully applied to the target data.
-  *
-  * @param index The index at which the hunk has been applied.
-  */
-case class Applied(index: Int) extends HunkResult
+  /** Converts a value from the specified input format into an element.
+    */
+  type FromInput[TIn, TElement] = TIn => TElement
 
-/** Denotes a hunk that was rejected and not applied to the target data.
-  */
-case object Rejected extends HunkResult
+  /** Provides support for reading and writing hunks in the unified diff format.
+    */
+  val unified = new UnifiedFormat
+    with FileBasedHunkFormat
+}
