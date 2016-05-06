@@ -50,6 +50,12 @@ class CommonPrefixSpec
     val diffAlgorithm = new DummyDiffAlgorithm("abcde", "xyz") with CommonPrefix[String, Char]
     diffAlgorithm.diff("123 abcde", "123 xyz")
   }
+  it should "strip common elements from the start of both inputs except for the specified horizon lines" in {
+    val diffAlgorithm = new DummyDiffAlgorithm("3 abcde", "3 xyz") with CommonPrefix[String, Char] {
+      override protected val horizonLines: Int = 2
+    }
+    diffAlgorithm.diff("123 abcde", "123 xyz")
+  }
   it should "use the supplied Equiv instance to match the source and target elements" in {
     implicit val equiv = Equiv.fromFunction[Char]((l, r) => l.toLower == r.toLower)
     val diffAlgorithm = new DummyDiffAlgorithm("abcde", "xyz") with CommonPrefix[String, Char]

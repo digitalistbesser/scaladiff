@@ -16,13 +16,10 @@
 
 package de.digitalistbesser.diff.algorithms
 
-import de.digitalistbesser.diff.DiffAlgorithm
-
 /** Determines the common prefix of the source and target before invoking the actual diff algorithm on the
   * remaining data as discussed on https://neil.fraser.name/writing/diff/.
   */
-trait CommonPrefix[TData, TElement]
-  extends DiffAlgorithm[TData, TElement] { self =>
+trait CommonPrefix[TData, TElement] extends CommonAffix[TData, TElement] {
   /** Determines the length of the common suffix by running a linear search at the start of the source and target
     * sequences before calling the base implementation.
     */
@@ -38,8 +35,11 @@ trait CommonPrefix[TData, TElement]
 
     if (length != source.length ||
         length != target.length) {
+      val horizonLines = this.horizonLines max 0
       super
-        .computeDifferences(source.view(length, source.length), target.view(length, target.length))
+        .computeDifferences(
+          source.view(length - horizonLines, source.length),
+          target.view(length - horizonLines, target.length))
         .map {
           case Insertion(s, t, e) => Insertion(s + length, t + length, e)
           case Deletion(s, t, e) => Deletion(s + length, t + length, e)
