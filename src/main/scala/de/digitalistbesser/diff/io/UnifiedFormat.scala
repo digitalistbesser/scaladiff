@@ -45,6 +45,134 @@ class UnifiedFormat extends LineBasedHunkFormat {
     */
   type Data[TElement] = UnifiedData[TElement]
 
+  /** @inheritdoc
+    */
+  def write[TElement](
+      writer: LineWriter,
+      data: UnifiedData[TElement])(implicit
+      toOutput: ToOutput[TElement, String]): WriteResult = data match {
+    case HunkData(sh, th, hunks) =>
+      import UnifiedFormat._
+
+      // write header
+      writer.writeLine(SourceHeader(sh))
+      writer.writeLine(TargetHeader(th))
+
+      // write hunks
+      hunks.foreach { h =>
+        writer.writeLine(HunkHeader(h.sourceIndex, h.sourceLength, h.targetIndex, h.targetLength))
+        h.edits.foreach {
+          case Insert(e) =>
+            writer.writeLine(LineInsert(e))
+
+          case Delete(e) =>
+            writer.writeLine(LineDelete(e))
+
+          case Match(e) =>
+            writer.writeLine(LineMatch(e))
+        }
+      }
+
+      WriteSuccess
+
+    case EmptyData =>
+      WriteSuccess
+  }
+
+  /** @inheritdoc
+    */
+  def read[TElement](
+      reader: LineReader)(implicit
+      fromInput: FromInput[String, TElement]): ReadResult[UnifiedData[TElement], Line] = {
+    import UnifiedFormat._
+
+    // reads a sequence of edits
+    @tailrec
+    def readEdits(
+        builder: mutable.Builder[Edit[TElement], Seq[Edit[TElement]]]): Seq[Edit[TElement]] = reader.currentLine match {
+      case Some(Line(LineInsert(e), _)) =>
+        builder += Insert(e)
+        reader.readLine()
+        readEdits(builder)
+
+      case Some(Line(LineDelete(e), _)) =>
+        builder += Delete(e)
+        reader.readLine()
+        readEdits(builder)
+
+      case Some(Line(LineMatch(e), _)) =>
+        builder += Match(e)
+        reader.readLine()
+        readEdits(builder)
+
+      case _ =>
+        builder.result()
+    }
+
+    // reads a single hunk
+    def readHunk(): ReadResult[Hunk[TElement], Line] = reader.currentLine match {
+      case Some(Line(HunkHeader(si, _, ti, _), _)) =>
+        reader.readLine()
+        ReadSuccess(Hunk(si, ti, readEdits(Seq.newBuilder[Edit[TElement]])))
+
+      case _ =>
+        ReadFailure(
+          new HunkFormatException("Hunk header malformed."),
+          reader.currentLine)
+    }
+
+    // reads zero or more hunks
+    @tailrec
+    def readHunks(
+        builder: mutable.Builder[Hunk[TElement], Seq[Hunk[TElement]]]): ReadResult[Seq[Hunk[TElement]], Line] = reader.currentLine match {
+      case Some(_) =>
+        readHunk() match {
+          case ReadSuccess(h) =>
+            builder += h
+            readHunks(builder)
+
+          case f: ReadFailure[Line] =>
+            f
+        }
+
+      case None =>
+        ReadSuccess(builder.result())
+    }
+
+    reader.currentLine match {
+      case None =>
+        ReadSuccess(EmptyData)
+
+      case Some(Line(SourceHeader(sh), _)) =>
+        reader.readLine()
+        reader.currentLine match {
+          case Some(Line(TargetHeader(th), _)) =>
+            reader.readLine()
+            readHunks(Seq.newBuilder[Hunk[TElement]]) match {
+              case ReadSuccess(h) =>
+                ReadSuccess(HunkData(sh, th, h))
+
+              case f: ReadFailure[Line] =>
+                f
+            }
+
+          case _ =>
+            ReadFailure(
+              new HunkFormatException("Target header malformed."),
+              reader.currentLine)
+        }
+
+      case _ =>
+        ReadFailure(
+          new HunkFormatException("Source header malformed."),
+          reader.currentLine)
+    }
+  }
+}
+
+/** Provides types for reading and writing the unified diff format.
+  */
+private[io] object UnifiedFormat {
   /** Basic implementation of a unified diff file header part.
     */
   private abstract class FileHeader(prefix: String) {
@@ -135,124 +263,4 @@ class UnifiedFormat extends LineBasedHunkFormat {
   /** A match.
     */
   private object LineMatch extends LineEdit(' ')
-
-  /** @inheritdoc
-    */
-  def write[TElement](
-      writer: LineWriter,
-      data: UnifiedData[TElement])(implicit
-      toOutput: ToOutput[TElement, String]): WriteResult = data match {
-    case HunkData(sh, th, hunks) =>
-      // write header
-      writer.writeLine(SourceHeader(sh))
-      writer.writeLine(TargetHeader(th))
-
-      // write hunks
-      hunks.foreach { h =>
-        writer.writeLine(HunkHeader(h.sourceIndex, h.sourceLength, h.targetIndex, h.targetLength))
-        h.edits.foreach {
-          case Insert(e) =>
-            writer.writeLine(LineInsert(toOutput(e)))
-
-          case Delete(e) =>
-            writer.writeLine(LineDelete(toOutput(e)))
-
-          case Match(e) =>
-            writer.writeLine(LineMatch(toOutput(e)))
-        }
-      }
-
-      WriteSuccess
-
-    case EmptyData =>
-      WriteSuccess
-  }
-
-  /** @inheritdoc
-    */
-  def read[TElement](
-      reader: LineReader)(implicit
-      fromInput: FromInput[String, TElement]): ReadResult[UnifiedData[TElement], Line] = {
-    // reads a sequence of edits
-    @tailrec
-    def readEdits(
-        builder: mutable.Builder[Edit[TElement], Seq[Edit[TElement]]]): Seq[Edit[TElement]] = reader.currentLine match {
-      case Some(Line(LineInsert(e), _)) =>
-        builder += Insert(fromInput(e))
-        reader.readLine()
-        readEdits(builder)
-
-      case Some(Line(LineDelete(e), _)) =>
-        builder += Delete(fromInput(e))
-        reader.readLine()
-        readEdits(builder)
-
-      case Some(Line(LineMatch(e), _)) =>
-        builder += Match(fromInput(e))
-        reader.readLine()
-        readEdits(builder)
-
-      case _ =>
-        builder.result()
-    }
-
-    // reads a single hunk
-    def readHunk(): ReadResult[Hunk[TElement], Line] = reader.currentLine match {
-      case Some(Line(HunkHeader(si, _, ti, _), _)) =>
-        reader.readLine()
-        ReadSuccess(Hunk(si, ti, readEdits(Seq.newBuilder[Edit[TElement]])))
-
-      case _ =>
-        ReadFailure(
-          new HunkFormatException("Hunk header malformed."),
-          reader.currentLine)
-    }
-
-    // reads zero or more hunks
-    @tailrec
-    def readHunks(
-        builder: mutable.Builder[Hunk[TElement], Seq[Hunk[TElement]]]): ReadResult[Seq[Hunk[TElement]], Line] = reader.currentLine match {
-      case Some(_) =>
-        readHunk() match {
-          case ReadSuccess(h) =>
-            builder += h
-            readHunks(builder)
-
-          case f: ReadFailure[Line] =>
-            f
-        }
-
-      case None =>
-        ReadSuccess(builder.result())
-    }
-
-    reader.currentLine match {
-      case None =>
-        ReadSuccess(EmptyData)
-
-      case Some(Line(SourceHeader(sh), _)) =>
-        reader.readLine()
-        reader.currentLine match {
-          case Some(Line(TargetHeader(th), _)) =>
-            reader.readLine()
-            readHunks(Seq.newBuilder[Hunk[TElement]]) match {
-              case ReadSuccess(h) =>
-                ReadSuccess(HunkData(sh, th, h))
-
-              case f: ReadFailure[Line] =>
-                f
-            }
-
-          case _ =>
-            ReadFailure(
-              new HunkFormatException("Target header malformed."),
-              reader.currentLine)
-        }
-
-      case _ =>
-        ReadFailure(
-          new HunkFormatException("Source header malformed."),
-          reader.currentLine)
-    }
-  }
 }

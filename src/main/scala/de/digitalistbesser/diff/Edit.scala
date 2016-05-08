@@ -18,15 +18,15 @@ package de.digitalistbesser.diff
 
 /** Denotes a single edit of an edit script.
   */
-abstract sealed class Edit[TElement]
+abstract sealed class Edit[+TElement]
 
-/** Denotes an deletion of some data at the specified index of the original input.
+/** Denotes a deletion of data.
   *
   * @param data The deleted data.
   */
 case class Delete[TElement](data: TElement) extends Edit[TElement]
 
-/** Denotes an insertion of some data after the specified index of the original input.
+/** Denotes an insertion of data.
   *
   * @param data The inserted data.
   */

@@ -29,4 +29,9 @@ package object io {
     */
   val unified = new UnifiedFormat
     with FileBasedHunkFormat
+
+  /** Provides support for reading and writing hunks in the context diff format.
+    */
+  val context = new ContextFormat
+    with FileBasedHunkFormat
 }
