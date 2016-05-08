@@ -18,7 +18,8 @@ package de.digitalistbesser.diff.algorithms
 
 import de.digitalistbesser.diff._
 
-import scala.collection._
+import scala.annotation.tailrec
+import scala.collection.mutable
 
 /** Diff algorithm implementation after "A File Comparison Program" by Webb Miller and Eugene W. Myers.
   *
@@ -26,66 +27,96 @@ import scala.collection._
   */
 class MillerMyersDiffAlgorithm[TData, TElement](implicit
     asSeq: AsSeq[TData, TElement],
-    equiv: Equiv[TElement])
-  extends DiffAlgorithm[TData, TElement] {
+    equiv: Equiv[TElement]) extends DiffAlgorithm[TData, TElement] {
   /** @inheritdoc
     */
   protected def computeDifferences(
       source: Seq[TElement],
       target: Seq[TElement]): Seq[Difference] = {
-    // initialize from identical prefixes
     val maxRow = source.length
     val maxColumn = target.length
-    var row = 0
-    while (row < maxRow && row < maxColumn && this.equiv.equiv(source(row), target(row))) {
-      row = row + 1
-    }
 
-    // compute diff
-    var lower = if (row == maxRow) 1 else -1
-    var upper = if (row == maxColumn) -1 else 1
-    if (lower <= upper) {
-      val actionsForDiagonal = mutable.HashMap[Int, List[Difference]]()
-      val rowForDiagonal = mutable.HashMap[Int, Int](0 -> row)
-      for (diagonal <- Stream.from(1)) {
-        for (offset <- lower to upper by 2 if offset <= upper) {
-          // determine next action
-          if (offset == -diagonal ||
-              (offset != diagonal && rowForDiagonal(offset + 1) >= rowForDiagonal(offset - 1))) {
-            row = rowForDiagonal(offset + 1) + 1
-            actionsForDiagonal(offset) = Deletion(row - 1, row + offset, source(row - 1)) :: actionsForDiagonal.getOrElse(offset + 1, Nil)
-          } else {
-            row = rowForDiagonal(offset - 1)
-            actionsForDiagonal(offset) = Insertion(row, row + offset - 1, target(row + offset - 1)) :: actionsForDiagonal.getOrElse(offset - 1, Nil)
-          }
+    // advances the diagonal starting at (row, column) along a sequences of identical elements
+    @tailrec
+    def advanceSubSequence(
+        row: Int,
+        column: Int): (Int, Int) =
+      if (row < maxRow && column < maxColumn && this.equiv.equiv(source(row), target(column)))
+        advanceSubSequence(row + 1, column + 1)
+      else
+        (row, column)
 
-          // check identical sub-sequence on current diagonal
-          var column = row + offset
-          while (row < maxRow && column < maxColumn && this.equiv.equiv(source(row), target(column))) {
-            row = row + 1
-            column = column + 1
-          }
-          rowForDiagonal(offset) = row
+    // initialize from identical prefixes
+    val (row, _) = advanceSubSequence(0, 0)
+    val actionsForDiagonal = mutable.HashMap[Int, Seq[Difference]]()
+    val rowForDiagonal = mutable.HashMap[Int, Int](0 -> row)
 
-          // check whether processing is finished
-          if (row == maxRow && column == maxColumn) {
-            return actionsForDiagonal(offset)
-          }
+    // denotes the result of the difference computation
+    abstract class Result
+    case class Success(differences: Seq[Difference]) extends Result
+    case class Failure(
+        lower: Int,
+        upper: Int) extends Result
 
-          // adjust bounds if any of the input sequences has been processed completely
-          if (row == maxRow) {
-            lower = offset + 2
-          }
-          if (column == maxColumn) {
-            upper = offset - 2
-          }
+    // computes the differences for the specified diagonal, bounds and offset
+    @tailrec
+    def computeDifferences(
+        diagonal: Int,
+        lower: Int,
+        upper: Int,
+        offset: Int): Result = {
+      // determine next action
+      val startRow =
+        if (offset == -diagonal ||
+            (offset != diagonal && rowForDiagonal(offset + 1) >= rowForDiagonal(offset - 1))) {
+          val row = rowForDiagonal(offset + 1) + 1
+          actionsForDiagonal(offset) = Deletion(row - 1, row + offset, source(row - 1)) +: actionsForDiagonal.getOrElse(offset + 1, Nil)
+          row
+        } else {
+          val row = rowForDiagonal(offset - 1)
+          actionsForDiagonal(offset) = Insertion(row, row + offset - 1, target(row + offset - 1)) +: actionsForDiagonal.getOrElse(offset - 1, Nil)
+          row
         }
 
-        lower = lower - 1
-        upper = upper + 1
+      // check identical sub-sequence on current diagonal
+      val (row, column) = advanceSubSequence(startRow, startRow + offset)
+      rowForDiagonal(offset) = row
+
+      // check whether processing is finished
+      if (row == maxRow && column == maxColumn) {
+        Success(actionsForDiagonal(offset))
+      } else {
+        // adjust bounds if any of the input sequences has been processed completely
+        val newLower = if (row == maxRow) offset + 2 else lower
+        val newUpper = if (column == maxColumn) offset - 2 else upper
+        if (offset + 2 <= upper) {
+          computeDifferences(diagonal, newLower, newUpper, offset + 2)
+        } else {
+          Failure(newLower, newUpper)
+        }
       }
     }
 
-    Seq.empty[Difference]
+    // computes the differences for the specified diagonal and bounds
+    @tailrec
+    def computeDiagonal(
+        diagonal: Int,
+        lower: Int,
+        upper: Int): Seq[Difference] = computeDifferences(diagonal, lower, upper, lower) match {
+      case Success(d) =>
+        d
+
+      case Failure(l, u) =>
+        computeDiagonal(diagonal + 1, l - 1, u + 1)
+    }
+
+    // compute differences
+    val lower = if (row == maxRow) 1 else -1
+    val upper = if (row == maxColumn) -1 else 1
+    if (lower <= upper) {
+      computeDiagonal(1, lower, upper)
+    } else {
+      Seq.empty[Difference]
+    }
   }
 }
