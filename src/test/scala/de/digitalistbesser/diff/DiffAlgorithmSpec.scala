@@ -20,8 +20,7 @@ import org.scalatest._
 
 /** Basic spec for diff algorithm implementations.
   */
-abstract class DiffAlgorithmSpec
-  extends FlatSpec {
+abstract class DiffAlgorithmSpec extends FlatSpec {
   /** Creates an instance of the diff algorithm under test.
     */
   protected def diffAlgorithm(implicit

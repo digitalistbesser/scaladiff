@@ -78,14 +78,13 @@ class MillerMyersDiffAlgorithm[TData, TElement](implicit
           row
         }
 
-      // check identical sub-sequence on current diagonal
+      // check identical sub-sequence on current diagonal & whether processing is finished
       val (row, column) = advanceSubSequence(startRow, startRow + offset)
-      rowForDiagonal(offset) = row
-
-      // check whether processing is finished
       if (row == maxRow && column == maxColumn) {
         Success(actionsForDiagonal(offset))
       } else {
+        rowForDiagonal(offset) = row
+
         // adjust bounds if any of the input sequences has been processed completely
         val newLower = if (row == maxRow) offset + 2 else lower
         val newUpper = if (column == maxColumn) offset - 2 else upper

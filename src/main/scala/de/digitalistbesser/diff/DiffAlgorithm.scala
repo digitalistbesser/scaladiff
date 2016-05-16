@@ -36,8 +36,7 @@ abstract class DiffAlgorithm[TData, TElement](implicit
   protected case class Deletion(
       sourceIndex: Int,
       targetIndex: Int,
-      element: TElement)
-    extends Difference
+      element: TElement) extends Difference
 
   /** Denotes an insertion of a single element.
     *
@@ -48,8 +47,7 @@ abstract class DiffAlgorithm[TData, TElement](implicit
   protected case class Insertion(
       sourceIndex: Int,
       targetIndex: Int,
-      element: TElement)
-    extends Difference
+      element: TElement) extends Difference
 
   /** Computes the differences of the specified source and target.
     *

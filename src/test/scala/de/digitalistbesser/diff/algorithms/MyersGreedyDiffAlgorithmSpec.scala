@@ -20,13 +20,13 @@ import de.digitalistbesser.diff._
 import org.scalatest.Inside._
 import org.scalatest.Matchers._
 
-/** Spec implementation for the Miller, Myers diff implementation.
+/** Spec implementation for the Myers greedy diff implementation.
   */
-class MillerMyersDiffAlgorithmSpec extends DiffAlgorithmSpec {
+class MyersGreedyDiffAlgorithmSpec extends DiffAlgorithmSpec {
   /** @inheritdoc
     */
   protected def diffAlgorithm(implicit
-      equiv: Equiv[String]): DiffAlgorithm[List[String], String] = new MillerMyersDiffAlgorithm[List[String], String]
+      equiv: Equiv[String]): DiffAlgorithm[List[String], String] = new MyersGreedyDiffAlgorithm[List[String], String]
 
   it should "provide an insertion for a target with an additional entry" in {
     val source = "abc" :: "123" :: Nil

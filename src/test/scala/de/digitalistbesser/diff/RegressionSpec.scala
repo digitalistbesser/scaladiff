@@ -16,7 +16,7 @@
 
 package de.digitalistbesser.diff
 
-import de.digitalistbesser.diff.algorithms.{CommonPrefix, CommonSuffix, Context, MillerMyersDiffAlgorithm}
+import de.digitalistbesser.diff.algorithms._
 import org.scalatest.FunSuite
 
 import scala.reflect.runtime.universe._
@@ -52,6 +52,30 @@ class RegressionSpec
       new PatchAlgorithm[Vector[String], String]),
     new DiffPatchCombination(
       new MillerMyersDiffAlgorithm[Vector[String], String] with CommonSuffix[Vector[String], String] with CommonPrefix[Vector[String], String] with Context[Vector[String], String],
+      new PatchAlgorithm[Vector[String], String]),
+    new DiffPatchCombination(
+      new MyersGreedyDiffAlgorithm[Vector[String], String],
+      new PatchAlgorithm[Vector[String], String]),
+    new DiffPatchCombination(
+      new MyersGreedyDiffAlgorithm[Vector[String], String] with CommonPrefix[Vector[String], String],
+      new PatchAlgorithm[Vector[String], String]),
+    new DiffPatchCombination(
+      new MyersGreedyDiffAlgorithm[Vector[String], String] with CommonSuffix[Vector[String], String],
+      new PatchAlgorithm[Vector[String], String]),
+    new DiffPatchCombination(
+      new MyersGreedyDiffAlgorithm[Vector[String], String] with CommonSuffix[Vector[String], String] with CommonPrefix[Vector[String], String],
+      new PatchAlgorithm[Vector[String], String]),
+    new DiffPatchCombination(
+      new MyersGreedyDiffAlgorithm[Vector[String], String] with Context[Vector[String], String],
+      new PatchAlgorithm[Vector[String], String]),
+    new DiffPatchCombination(
+      new MyersGreedyDiffAlgorithm[Vector[String], String] with CommonPrefix[Vector[String], String] with Context[Vector[String], String],
+      new PatchAlgorithm[Vector[String], String]),
+    new DiffPatchCombination(
+      new MyersGreedyDiffAlgorithm[Vector[String], String] with CommonSuffix[Vector[String], String] with Context[Vector[String], String],
+      new PatchAlgorithm[Vector[String], String]),
+    new DiffPatchCombination(
+      new MyersGreedyDiffAlgorithm[Vector[String], String] with CommonSuffix[Vector[String], String] with CommonPrefix[Vector[String], String] with Context[Vector[String], String],
       new PatchAlgorithm[Vector[String], String])
   )
 
