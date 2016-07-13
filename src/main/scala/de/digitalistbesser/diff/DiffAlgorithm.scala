@@ -42,7 +42,7 @@ abstract class DiffAlgorithm[TData, TElement](implicit
     *
     * @param sourceIndex The index in the source after which the element is inserted.
     * @param targetIndex The index of the element in the target.
-    * @param element The deleted element itself.
+    * @param element The inserted element itself.
     */
   protected case class Insertion(
       sourceIndex: Int,
@@ -61,28 +61,32 @@ abstract class DiffAlgorithm[TData, TElement](implicit
     @tailrec
     def loop(
         differences: Seq[Difference],
-        hunks: Seq[Hunk[TElement]] = Nil,
-        edits: Seq[Edit[TElement]] = Nil): Seq[Hunk[TElement]] = differences match {
+        hunks: Seq[Hunk[TElement]] = Seq.empty[Hunk[TElement]],
+        deletions: Seq[Delete[TElement]] = Seq.empty[Delete[TElement]],
+        insertions: Seq[Insert[TElement]] = Seq.empty[Insert[TElement]]): Seq[Hunk[TElement]] = differences match {
       case Seq(Insertion(s1, _, e1), i @ Insertion(s2, _, _), dt @ _*) if s1 == s2 =>
-        loop(i +: dt, hunks, Insert(e1) +: edits)
+        loop(i +: dt, hunks, deletions, Insert(e1) +: insertions)
 
       case Seq(Insertion(s1, _, e1), d @ Deletion(s2, _, _), dt @ _*) if s1 == s2 + 1 =>
-        loop(d +: dt, hunks, Insert(e1) +: edits)
+        loop(d +: dt, hunks, deletions, Insert(e1) +: insertions)
 
       case Seq(Deletion(s1, _, e1), d @ Deletion(s2, _, _), dt @ _*) if s1 == s2 + 1 =>
-        loop(d +: dt, hunks, Delete(e1) +: edits)
+        loop(d +: dt, hunks, Delete(e1) +: deletions, insertions)
+
+      case Seq(Deletion(s1, _, e1), i @ Insertion(s2, _, _), dt @ _*) if s1 == s2 =>
+        loop(i +: dt, hunks, Delete(e1) +: deletions, insertions)
 
       case Seq(Insertion(s, t, e), dt @ _*) =>
-        loop(dt, Hunk(s, t, Insert(e) +: edits) +: hunks)
+        loop(dt, Hunk(s, t, deletions ++: Insert(e) +: insertions) +: hunks)
 
       case Seq(Deletion(s, t, e), dt @ _*) =>
-        loop(dt, Hunk(s, t, Delete(e) +: edits) +: hunks)
+        loop(dt, Hunk(s, t, Delete(e) +: deletions ++: insertions) +: hunks)
 
       case Seq(Insertion(s, t, e)) =>
-        Hunk(s, t, Insert(e) +: edits) +: hunks
+        Hunk(s, t, deletions ++: Insert(e) +: insertions) +: hunks
 
       case Seq(Deletion(s, t, e)) =>
-        Hunk(s, t, Delete(e) +: edits) +: hunks
+        Hunk(s, t, Delete(e) +: deletions ++: insertions) +: hunks
 
       case _ =>
         hunks

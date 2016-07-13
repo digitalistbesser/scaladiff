@@ -18,11 +18,11 @@ package de.digitalistbesser.diff.algorithms
 
 import de.digitalistbesser.diff._
 
-/** Spec implementation for the Myers greedy diff implementation.
+/** Spec implementation for the Myers space optimized diff implementation.
   */
-class MyersGreedyDiffAlgorithmSpec extends MyersBaseDiffAlgorithmSpec {
+class MyersSpaceOptimizedDiffAlgorithmSpec extends MyersBaseDiffAlgorithmSpec {
   /** @inheritdoc
     */
   protected def diffAlgorithm(implicit
-      equiv: Equiv[String]): DiffAlgorithm[List[String], String] = new MyersGreedyDiffAlgorithm[List[String], String]
+      equiv: Equiv[String]): DiffAlgorithm[List[String], String] = new MyersSpaceOptimizedDiffAlgorithm[List[String], String]
 }

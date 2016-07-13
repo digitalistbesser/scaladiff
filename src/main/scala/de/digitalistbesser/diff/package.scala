@@ -16,7 +16,7 @@
 
 package de.digitalistbesser
 
-import de.digitalistbesser.diff.algorithms.{CommonPrefix, CommonSuffix, Context, MillerMyersDiffAlgorithm}
+import de.digitalistbesser.diff.algorithms._
 
 import scala.collection.generic.CanBuildFrom
 import scala.collection.mutable
@@ -46,7 +46,7 @@ package object diff {
     /** @inheritdoc
       */
     protected def diffAlgorithm[TData, TElement: Equiv](implicit
-        asSeq: AsSeq[TData, TElement]): DiffAlgorithm[TData, TElement] = new MillerMyersDiffAlgorithm[TData, TElement]
+        asSeq: AsSeq[TData, TElement]): DiffAlgorithm[TData, TElement] = new MyersSpaceOptimizedDiffAlgorithm[TData, TElement]
       with CommonSuffix[TData, TElement]
       with CommonPrefix[TData, TElement]
       with Context[TData, TElement]

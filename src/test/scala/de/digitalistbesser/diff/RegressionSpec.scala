@@ -76,6 +76,30 @@ class RegressionSpec
       new PatchAlgorithm[Vector[String], String]),
     new DiffPatchCombination(
       new MyersGreedyDiffAlgorithm[Vector[String], String] with CommonSuffix[Vector[String], String] with CommonPrefix[Vector[String], String] with Context[Vector[String], String],
+      new PatchAlgorithm[Vector[String], String]),
+    new DiffPatchCombination(
+      new MyersSpaceOptimizedDiffAlgorithm[Vector[String], String],
+      new PatchAlgorithm[Vector[String], String]),
+    new DiffPatchCombination(
+      new MyersSpaceOptimizedDiffAlgorithm[Vector[String], String] with CommonPrefix[Vector[String], String],
+      new PatchAlgorithm[Vector[String], String]),
+    new DiffPatchCombination(
+      new MyersSpaceOptimizedDiffAlgorithm[Vector[String], String] with CommonSuffix[Vector[String], String],
+      new PatchAlgorithm[Vector[String], String]),
+    new DiffPatchCombination(
+      new MyersSpaceOptimizedDiffAlgorithm[Vector[String], String] with CommonSuffix[Vector[String], String] with CommonPrefix[Vector[String], String],
+      new PatchAlgorithm[Vector[String], String]),
+    new DiffPatchCombination(
+      new MyersSpaceOptimizedDiffAlgorithm[Vector[String], String] with Context[Vector[String], String],
+      new PatchAlgorithm[Vector[String], String]),
+    new DiffPatchCombination(
+      new MyersSpaceOptimizedDiffAlgorithm[Vector[String], String] with CommonPrefix[Vector[String], String] with Context[Vector[String], String],
+      new PatchAlgorithm[Vector[String], String]),
+    new DiffPatchCombination(
+      new MyersSpaceOptimizedDiffAlgorithm[Vector[String], String] with CommonSuffix[Vector[String], String] with Context[Vector[String], String],
+      new PatchAlgorithm[Vector[String], String]),
+    new DiffPatchCombination(
+      new MyersSpaceOptimizedDiffAlgorithm[Vector[String], String] with CommonSuffix[Vector[String], String] with CommonPrefix[Vector[String], String] with Context[Vector[String], String],
       new PatchAlgorithm[Vector[String], String])
   )
 
