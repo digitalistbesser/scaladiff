@@ -73,13 +73,6 @@ class UnifiedFormatSpec extends LineBasedHunkFormatSpec {
     "-b",
     "+B",
     "+C")
-  private val malformedSourceHeader: Seq[String] = this.singleHunk.updated(0, "-- sourceHeader")
-  private val malformedTargetHeader: Seq[String] = this.singleHunk.updated(1, "++ targetHeader")
-  private val malformedHunkHeader: Seq[String] = this.singleHunk.updated(2, "@@ 2, +2,2 @@")
-  private val malformedHunkData: Seq[String] = this.singleHunk.updated(5, "Test")
-  private val missingSourceHeader: Seq[String] = "###" +: this.singleHunk
-  private val missingTargetHeader: Seq[String] = this.singleHunk.take(1) ++: "###" +: this.singleHunk.drop(1)
-  private val missingHunkHeader: Seq[String] = this.singleHunk.take(2) ++: "###" +: this.singleHunk.drop(2)
   private val format = new UnifiedFormat with SeqBasedHunkFormat
 
   import format._
@@ -144,45 +137,52 @@ class UnifiedFormatSpec extends LineBasedHunkFormatSpec {
     }
   }
   it should "fail reading input with missing source header" in {
-    val result = read(this.missingSourceHeader)
-    inside(result) { case ReadFailure(e: HunkFormatException, Some(Line(l, 1))) =>
-      l should equal (this.missingSourceHeader.head)
+    val missingSourceHeader: Seq[String] = "###" +: this.singleHunk
+    val result = read(missingSourceHeader)
+    inside(result) { case ReadFailure(_: HunkFormatException, Some(Line(l, 1))) =>
+      l should equal (missingSourceHeader.head)
     }
   }
   it should "fail reading input with missing target header" in {
-    val result = read(this.missingTargetHeader)
-    inside(result) { case ReadFailure(e: HunkFormatException, Some(Line(l, 2))) =>
-      l should equal (this.missingTargetHeader(1))
+    val missingTargetHeader: Seq[String] = this.singleHunk.take(1) ++: "###" +: this.singleHunk.drop(1)
+    val result = read(missingTargetHeader)
+    inside(result) { case ReadFailure(_: HunkFormatException, Some(Line(l, 2))) =>
+      l should equal (missingTargetHeader(1))
     }
   }
   it should "fail reading input with missing hunk header" in {
-    val result = read(this.missingHunkHeader)
-    inside(result) { case ReadFailure(e: HunkFormatException, Some(Line(l, 3))) =>
-      l should equal (this.missingHunkHeader(2))
+    val missingHunkHeader: Seq[String] = this.singleHunk.take(2) ++: "###" +: this.singleHunk.drop(2)
+    val result = read(missingHunkHeader)
+    inside(result) { case ReadFailure(_: HunkFormatException, Some(Line(l, 3))) =>
+      l should equal (missingHunkHeader(2))
     }
   }
   it should "fail reading input with malformed source header" in {
-    val result = read(this.malformedSourceHeader)
-    inside(result) { case ReadFailure(e: HunkFormatException, Some(Line(l, 1))) =>
-      l should equal (this.malformedSourceHeader.head)
+    val malformedSourceHeader: Seq[String] = this.singleHunk.updated(0, "-- sourceHeader")
+    val result = read(malformedSourceHeader)
+    inside(result) { case ReadFailure(_: HunkFormatException, Some(Line(l, 1))) =>
+      l should equal (malformedSourceHeader.head)
     }
   }
   it should "fail reading input with malformed target header" in {
-    val result = read(this.malformedTargetHeader)
-    inside(result) { case ReadFailure(e: HunkFormatException, Some(Line(l, 2))) =>
-      l should equal (this.malformedTargetHeader(1))
+    val malformedTargetHeader: Seq[String] = this.singleHunk.updated(1, "++ targetHeader")
+    val result = read(malformedTargetHeader)
+    inside(result) { case ReadFailure(_: HunkFormatException, Some(Line(l, 2))) =>
+      l should equal (malformedTargetHeader(1))
     }
   }
   it should "fail reading input with malformed hunk header" in {
-    val result = read(this.malformedHunkHeader)
-    inside(result) { case ReadFailure(e: HunkFormatException, Some(Line(l, 3))) =>
-      l should equal (this.malformedHunkHeader(2))
+    val malformedHunkHeader: Seq[String] = this.singleHunk.updated(2, "@@ 2, +2,2 @@")
+    val result = read(malformedHunkHeader)
+    inside(result) { case ReadFailure(_: HunkFormatException, Some(Line(l, 3))) =>
+      l should equal (malformedHunkHeader(2))
     }
   }
   it should "fail reading input with malformed hunk data" in {
-    val result = read(this.malformedHunkData)
-    inside(result) { case ReadFailure(e: HunkFormatException, Some(Line(l, 6))) =>
-      l should equal (this.malformedHunkData(5))
+    val malformedHunkData: Seq[String] = this.singleHunk.updated(5, "Test")
+    val result = read(malformedHunkData)
+    inside(result) { case ReadFailure(_: HunkFormatException, Some(Line(l, 6))) =>
+      l should equal (malformedHunkData(5))
     }
   }
 }

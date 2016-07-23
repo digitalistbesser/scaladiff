@@ -33,13 +33,11 @@ class UnifiedFormat extends LineBasedHunkFormat {
   case class HunkData[TElement](
       sourceHeader: String,
       targetHeader: String,
-      hunks: Seq[Hunk[TElement]])
-    extends UnifiedData[TElement]
+      hunks: Seq[Hunk[TElement]]) extends UnifiedData[TElement]
 
   /** Denotes an empty hunk sequence.
     */
-  case object EmptyData
-    extends UnifiedData[Nothing]
+  case object EmptyData extends UnifiedData[Nothing]
 
   /** @inheritdoc
     */

@@ -34,13 +34,11 @@ class ContextFormat extends LineBasedHunkFormat {
   case class HunkData[TElement](
       sourceHeader: String,
       targetHeader: String,
-      hunks: Seq[Hunk[TElement]])
-    extends ContextData[TElement]
+      hunks: Seq[Hunk[TElement]]) extends ContextData[TElement]
 
   /** Denotes an empty hunk sequence.
     */
-  case object EmptyData
-    extends ContextData[Nothing]
+  case object EmptyData extends ContextData[Nothing]
 
   /** @inheritdoc
     */
@@ -349,7 +347,7 @@ private[io] object ContextFormat {
     def unapply(header: String): Boolean = header == "***************"
   }
 
-  /** Basic implementation of the header that introduces the changes of he source or target.
+  /** Basic implementation of the header that introduces the changes of the source or target.
     */
   private abstract class InputHunkHeader(
       prefix: String,

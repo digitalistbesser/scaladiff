@@ -23,8 +23,7 @@ import scala.collection.mutable
 
 /** Adds context to the plain hunks determined by the underlying diff algorithm.
   */
-trait Context[TData, TElement]
-  extends DiffAlgorithm[TData, TElement] { self =>
+trait Context[TData, TElement] extends DiffAlgorithm[TData, TElement] {
   /** The maximum number of elements that shall surround the edits. Defaults to 3.
     */
   protected val contextSize: Int = 3
@@ -64,12 +63,9 @@ trait Context[TData, TElement]
         builder.result()
     }
 
-    this.contextSize match {
-      case s if s <= 0 =>
-        super.diff(source, target)
-
-      case _ =>
-        loop(this.asSeq(source), super.diff(source, target), List.newBuilder[Hunk[TElement]])
-    }
+    if (this.contextSize <= 0)
+      super.diff(source, target)
+    else
+      loop(this.asSeq(source), super.diff(source, target), List.newBuilder[Hunk[TElement]])
   }
 }
