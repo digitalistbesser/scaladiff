@@ -64,36 +64,39 @@ class MillerMyersDiffAlgorithm[TData, TElement](implicit
         diagonal: Int,
         lower: Int,
         upper: Int,
-        offset: Int): Result = {
-      // determine next action
-      val startRow =
-        if (offset == -diagonal ||
-            (offset != diagonal && rowForDiagonal(offset + 1) >= rowForDiagonal(offset - 1))) {
-          val row = rowForDiagonal(offset + 1) + 1
-          actionsForDiagonal(offset) = Deletion(row - 1, row + offset, source(row - 1)) +: actionsForDiagonal.getOrElse(offset + 1, Nil)
-          row
+        offsets: Seq[Int]): Result = offsets match {
+      case Seq(offset, ot @ _*) if lower <= offset && offset <= upper =>
+        // determine next action
+        val startRow =
+          if (offset == -diagonal ||
+              (offset != diagonal && rowForDiagonal(offset + 1) >= rowForDiagonal(offset - 1))) {
+            val row = rowForDiagonal(offset + 1) + 1
+            actionsForDiagonal(offset) = Deletion(row - 1, row + offset, source(row - 1)) +: actionsForDiagonal.getOrElse(offset + 1, Nil)
+            row
+          } else {
+            val row = rowForDiagonal(offset - 1)
+            actionsForDiagonal(offset) = Insertion(row, row + offset - 1, target(row + offset - 1)) +: actionsForDiagonal.getOrElse(offset - 1, Nil)
+            row
+          }
+
+        // check identical sub-sequence on current diagonal & whether processing is finished
+        val (row, column) = advanceSubSequence(startRow, startRow + offset)
+        if (row == maxRow && column == maxColumn) {
+          Success(actionsForDiagonal(offset))
         } else {
-          val row = rowForDiagonal(offset - 1)
-          actionsForDiagonal(offset) = Insertion(row, row + offset - 1, target(row + offset - 1)) +: actionsForDiagonal.getOrElse(offset - 1, Nil)
-          row
+          rowForDiagonal(offset) = row
+
+          // adjust bounds if any of the input sequences has been processed completely
+          val newLower = if (row == maxRow) offset + 2 else lower
+          val newUpper = if (column == maxColumn) offset - 2 else upper
+          computeDifferences(diagonal, newLower, newUpper, ot)
         }
 
-      // check identical sub-sequence on current diagonal & whether processing is finished
-      val (row, column) = advanceSubSequence(startRow, startRow + offset)
-      if (row == maxRow && column == maxColumn) {
-        Success(actionsForDiagonal(offset))
-      } else {
-        rowForDiagonal(offset) = row
+      case Seq(_, ot @ _*) =>
+        computeDifferences(diagonal, lower, upper, ot)
 
-        // adjust bounds if any of the input sequences has been processed completely
-        val newLower = if (row == maxRow) offset + 2 else lower
-        val newUpper = if (column == maxColumn) offset - 2 else upper
-        if (offset + 2 <= upper) {
-          computeDifferences(diagonal, newLower, newUpper, offset + 2)
-        } else {
-          Failure(newLower, newUpper)
-        }
-      }
+      case _ =>
+        Failure(lower, upper)
     }
 
     // computes the differences for the specified diagonal and bounds
@@ -101,7 +104,7 @@ class MillerMyersDiffAlgorithm[TData, TElement](implicit
     def computeDiagonal(
         diagonal: Int,
         lower: Int,
-        upper: Int): Seq[Difference] = computeDifferences(diagonal, lower, upper, lower) match {
+        upper: Int): Seq[Difference] = computeDifferences(diagonal, lower, upper, lower to upper by 2) match {
       case Success(d) =>
         d
 
