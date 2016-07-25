@@ -185,4 +185,46 @@ class UnifiedFormatSpec extends LineBasedHunkFormatSpec {
       l should equal (malformedHunkData(5))
     }
   }
+  it should "fail reading input with missing deletions" in {
+    val malformedHunkData: Seq[String] = this.multipleHunks.take(6) ++: this.multipleHunks.drop(7)
+    val result = read(malformedHunkData)
+    inside(result) { case ReadFailure(_: HunkFormatException, Some(Line(l, 11))) =>
+      l should equal (malformedHunkData(10))
+    }
+  }
+  it should "fail reading input with additional deletions" in {
+    val malformedHunkData: Seq[String] = this.multipleHunks.take(7) ++: "-q" +: this.multipleHunks.drop(7)
+    val result = read(malformedHunkData)
+    inside(result) { case ReadFailure(_: HunkFormatException, Some(Line(l, 12))) =>
+      l should equal (malformedHunkData(11))
+    }
+  }
+  it should "fail reading input with missing insertions" in {
+    val malformedHunkData: Seq[String] = this.multipleHunks.take(7) ++: this.multipleHunks.drop(8)
+    val result = read(malformedHunkData)
+    inside(result) { case ReadFailure(_: HunkFormatException, Some(Line(l, 11))) =>
+      l should equal (malformedHunkData(10))
+    }
+  }
+  it should "fail reading input with additional insertions" in {
+    val malformedHunkData: Seq[String] = this.multipleHunks.take(8) ++: "+Q" +: this.multipleHunks.drop(8)
+    val result = read(malformedHunkData)
+    inside(result) { case ReadFailure(_: HunkFormatException, Some(Line(l, 12))) =>
+      l should equal (malformedHunkData(11))
+    }
+  }
+  it should "fail reading input with missing matches" in {
+    val malformedHunkData: Seq[String] = this.multipleHunks.take(5) ++: this.multipleHunks.slice(6, 8) ++: this.multipleHunks.drop(9)
+    val result = read(malformedHunkData)
+    inside(result) { case ReadFailure(_: HunkFormatException, Some(Line(l, 10))) =>
+      l should equal (malformedHunkData(9))
+    }
+  }
+  it should "fail reading input with additional matches" in {
+    val malformedHunkData: Seq[String] = this.multipleHunks.take(6) ++: " q" +: this.multipleHunks.slice(6, 8) ++: " q" +: this.multipleHunks.drop(8)
+    val result = read(malformedHunkData)
+    inside(result) { case ReadFailure(_: HunkFormatException, Some(Line(l, 12))) =>
+      l should equal (malformedHunkData(11))
+    }
+  }
 }

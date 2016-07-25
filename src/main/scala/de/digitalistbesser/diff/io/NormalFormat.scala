@@ -130,16 +130,21 @@ class NormalFormat extends LineBasedHunkFormat {
     // reads the deletions from the reader
     @tailrec
     def readDeletions(
+        expected: Int,
         builder: mutable.Builder[Delete[TElement], Seq[Delete[TElement]]]): ReadResult[Seq[Delete[TElement]], Line] = reader.currentLine match {
+      case Some(Line(LineDelete(_), _)) if expected == 0 =>
+        ReadFailure(new HunkFormatException("Too many edits in hunk."), reader.currentLine)
+
       case Some(Line(LineDelete(e), _)) =>
         builder += Delete(e)
         reader.readLine()
-        readDeletions(builder)
+        readDeletions(expected - 1, builder)
 
       case Some(Line(LineInsert(_), _)) =>
-        ReadFailure(
-          new HunkFormatException("Insertion not permissible in target section."),
-          reader.currentLine)
+        ReadFailure(new HunkFormatException("Insertion not permissible in source section."), reader.currentLine)
+
+      case _ if expected > 0 =>
+        ReadFailure(new HunkFormatException("Edits(s) missing from hunk."), reader.currentLine)
 
       case _ =>
         ReadSuccess(builder.result())
@@ -148,16 +153,21 @@ class NormalFormat extends LineBasedHunkFormat {
     // reads the insertions from the reader
     @tailrec
     def readInsertions(
+        expected: Int,
         builder: mutable.Builder[Insert[TElement], Seq[Insert[TElement]]]): ReadResult[Seq[Insert[TElement]], Line] = reader.currentLine match {
+      case Some(Line(LineInsert(_), _)) if expected == 0 =>
+        ReadFailure(new HunkFormatException("Too many edits in hunk."), reader.currentLine)
+
       case Some(Line(LineInsert(e), _)) =>
         builder += Insert(e)
         reader.readLine()
-        readInsertions(builder)
+        readInsertions(expected - 1, builder)
 
       case Some(Line(LineDelete(_), _)) =>
-        ReadFailure(
-          new HunkFormatException("Deletion not permissible in target section."),
-          reader.currentLine)
+        ReadFailure(new HunkFormatException("Deletion not permissible in target section."), reader.currentLine)
+
+      case _ if expected > 0 =>
+        ReadFailure(new HunkFormatException("Edits(s) missing from hunk."), reader.currentLine)
 
       case _ =>
         ReadSuccess(builder.result())
@@ -167,12 +177,12 @@ class NormalFormat extends LineBasedHunkFormat {
     def readHunk(): ReadResult[Hunk[TElement], Line] = reader.currentLine match {
       case Some(Line(Change(si, sl, ti, tl), _)) =>
         reader.readLine()
-        readDeletions(Seq.newBuilder[Delete[TElement]]) match {
+        readDeletions(sl, Seq.newBuilder[Delete[TElement]]) match {
           case ReadSuccess(d) =>
             reader.currentLine match {
               case Some(Line(LineEditDelimiter(), _)) =>
                 reader.readLine()
-                readInsertions(Seq.newBuilder[Insert[TElement]]) match {
+                readInsertions(tl, Seq.newBuilder[Insert[TElement]]) match {
                   case ReadSuccess(i) =>
                     ReadSuccess(Hunk(si - 1, ti - 1, d ++ i))
 
@@ -181,9 +191,7 @@ class NormalFormat extends LineBasedHunkFormat {
                 }
 
               case _ =>
-                ReadFailure(
-                  new HunkFormatException("Delimiter expected."),
-                  reader.currentLine)
+                ReadFailure(new HunkFormatException("Delimiter expected."), reader.currentLine)
             }
 
           case f: ReadFailure[Line] =>
@@ -192,7 +200,7 @@ class NormalFormat extends LineBasedHunkFormat {
 
       case Some(Line(Deletion(si, sl, ti, _), _)) =>
         reader.readLine()
-        readDeletions(Seq.newBuilder[Delete[TElement]]) match {
+        readDeletions(sl, Seq.newBuilder[Delete[TElement]]) match {
           case ReadSuccess(d) =>
             ReadSuccess(Hunk(si - 1, ti, d))
 
@@ -202,7 +210,7 @@ class NormalFormat extends LineBasedHunkFormat {
 
       case Some(Line(Insertion(si, _, ti, tl), _)) =>
         reader.readLine()
-        readInsertions(Seq.newBuilder[Insert[TElement]]) match {
+        readInsertions(tl, Seq.newBuilder[Insert[TElement]]) match {
           case ReadSuccess(i) =>
             ReadSuccess(Hunk(si, ti - 1, i))
 
@@ -211,9 +219,7 @@ class NormalFormat extends LineBasedHunkFormat {
         }
 
       case _ =>
-        ReadFailure(
-          new HunkFormatException("Hunk header malformed."),
-          reader.currentLine)
+        ReadFailure(new HunkFormatException("Hunk header malformed."), reader.currentLine)
     }
 
     // reads zero or more hunks

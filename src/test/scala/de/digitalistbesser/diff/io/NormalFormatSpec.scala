@@ -177,4 +177,49 @@ class NormalFormatSpec extends LineBasedHunkFormatSpec {
       l should equal (invalidTargetEdit(2))
     }
   }
+  it should "fail reading input with missing deletions" in {
+    val invalidSourceEdit: Seq[String] = this.emptyTarget.take(3)
+    val result1 = read(invalidSourceEdit)
+    inside(result1) { case ReadFailure(_: HunkFormatException, None) =>
+    }
+    val invalidHunk: Seq[String] = this.singleHunk.take(1) ++: this.singleHunk.drop(2)
+    val result2 = read(invalidHunk)
+    inside(result2) { case ReadFailure(_: HunkFormatException, Some(Line(l, 2))) =>
+        l should equal (invalidHunk(1))
+    }
+  }
+  it should "fail reading input with additional deletions" in {
+    val invalidSourceEdit: Seq[String] = this.emptyTarget :+ "<d"
+    val result1 = read(invalidSourceEdit)
+    inside(result1) { case ReadFailure(_: HunkFormatException, Some(Line(l, 5))) =>
+      l should equal (invalidSourceEdit(4))
+    }
+    val invalidHunk: Seq[String] = this.singleHunk.take(2) ++: "<c" +: this.singleHunk.drop(2)
+    val result2 = read(invalidHunk)
+    inside(result2) { case ReadFailure(_: HunkFormatException, Some(Line(l, 3))) =>
+        l should equal (invalidHunk(2))
+    }
+  }
+  it should "fail reading input with missing insertions" in {
+    val invalidTargetEdit: Seq[String] = this.emptySource.take(3)
+    val result1 = read(invalidTargetEdit)
+    inside(result1) { case ReadFailure(_: HunkFormatException, None) =>
+    }
+    val invalidHunk: Seq[String] = this.singleHunk.take(4)
+    val result2 = read(invalidHunk)
+    inside(result2) { case ReadFailure(_: HunkFormatException, None) =>
+    }
+  }
+  it should "fail reading input with additional insertions" in {
+    val invalidTargetEdit: Seq[String] = this.emptySource:+ ">d"
+    val result1 = read(invalidTargetEdit)
+    inside(result1) { case ReadFailure(_: HunkFormatException, Some(Line(l, 5))) =>
+      l should equal (invalidTargetEdit(4))
+    }
+    val invalidHunk: Seq[String] = this.singleHunk :+ "<D"
+    val result2 = read(invalidHunk)
+    inside(result2) { case ReadFailure(_: HunkFormatException, Some(Line(l, 6))) =>
+        l should equal (invalidHunk(5))
+    }
+  }
 }

@@ -136,26 +136,31 @@ class ContextFormat extends LineBasedHunkFormat {
     // reads a sequence of source edits
     @tailrec
     def readSourceEdits(
+        expected: Int,
         builder: mutable.Builder[Edit[TElement], Seq[Edit[TElement]]]): ReadResult[Seq[Edit[TElement]], Line] = reader.currentLine match {
+      case Some(Line(LineDelete(_), _)) | Some(Line(LineChange(_), _)) | Some(Line(LineMatch(_), _)) if expected == 0 =>
+        ReadFailure(new HunkFormatException("Too many edits in hunk."), reader.currentLine)
+
       case Some(Line(LineDelete(e), _)) =>
         builder += Delete(e)
         reader.readLine()
-        readSourceEdits(builder)
+        readSourceEdits(expected - 1, builder)
 
       case Some(Line(LineChange(e), _)) =>
         builder += Delete(e)
         reader.readLine()
-        readSourceEdits(builder)
+        readSourceEdits(expected - 1, builder)
 
       case Some(Line(LineMatch(e), _)) =>
         builder += Match(e)
         reader.readLine()
-        readSourceEdits(builder)
+        readSourceEdits(expected - 1, builder)
 
       case Some(Line(LineInsert(_), _)) =>
-        ReadFailure(
-          new HunkFormatException("Insertion not permissible in source section."),
-          reader.currentLine)
+        ReadFailure(new HunkFormatException("Insertion not permissible in source section."), reader.currentLine)
+
+      case _ if expected > 0 =>
+        ReadFailure(new HunkFormatException("Edit(s) missing from hunk."), reader.currentLine)
 
       case _ =>
         ReadSuccess(builder.result())
@@ -164,26 +169,31 @@ class ContextFormat extends LineBasedHunkFormat {
     // reads a sequence of target edits
     @tailrec
     def readTargetEdits(
+        expected: Int,
         builder: mutable.Builder[Edit[TElement], Seq[Edit[TElement]]]): ReadResult[Seq[Edit[TElement]], Line] = reader.currentLine match {
+      case Some(Line(LineInsert(_), _)) | Some(Line(LineChange(_), _)) | Some(Line(LineMatch(_), _)) if expected == 0 =>
+        ReadFailure(new HunkFormatException("Too many edits in hunk."), reader.currentLine)
+
       case Some(Line(LineInsert(e), _)) =>
         builder += Insert(e)
         reader.readLine()
-        readTargetEdits(builder)
+        readTargetEdits(expected - 1, builder)
 
       case Some(Line(LineChange(e), _)) =>
         builder += Insert(e)
         reader.readLine()
-        readTargetEdits(builder)
+        readTargetEdits(expected - 1, builder)
 
       case Some(Line(LineMatch(e), _)) =>
         builder += Match(e)
         reader.readLine()
-        readTargetEdits(builder)
+        readTargetEdits(expected - 1, builder)
 
       case Some(Line(LineDelete(_), _)) =>
-        ReadFailure(
-          new HunkFormatException("Deletion not permissible in target section."),
-          reader.currentLine)
+        ReadFailure(new HunkFormatException("Deletion not permissible in target section."), reader.currentLine)
+
+      case _ if expected > 0 =>
+        ReadFailure(new HunkFormatException("Edit(s) missing from hunk."), reader.currentLine)
 
       case _ =>
         ReadSuccess(builder.result())
@@ -224,14 +234,14 @@ class ContextFormat extends LineBasedHunkFormat {
       case Some(Line(HunkHeader(), _)) =>
         reader.readLine()
         reader.currentLine match {
-          case Some(Line(SourceHunkHeader(si, _), _)) =>
+          case Some(Line(SourceHunkHeader(si, sl), _)) =>
             reader.readLine()
-            readSourceEdits(Seq.newBuilder[Edit[TElement]]) match {
+            readSourceEdits(sl, Seq.newBuilder[Edit[TElement]]) match {
               case ReadSuccess(se) =>
                 reader.currentLine match {
-                  case Some(Line(TargetHunkHeader(ti, _), _)) =>
+                  case Some(Line(TargetHunkHeader(ti, tl), _)) =>
                     reader.readLine()
-                    readTargetEdits(Seq.newBuilder[Edit[TElement]]) match {
+                    readTargetEdits(tl, Seq.newBuilder[Edit[TElement]]) match {
                       case ReadSuccess(te) =>
                         ReadSuccess(Hunk(si, ti, mergeEdits(se, te, Seq.newBuilder[Edit[TElement]])))
 
@@ -240,9 +250,7 @@ class ContextFormat extends LineBasedHunkFormat {
                     }
 
                   case _ =>
-                    ReadFailure(
-                      new HunkFormatException("Hunk target header malformed."),
-                      reader.currentLine)
+                    ReadFailure(new HunkFormatException("Hunk target header malformed."), reader.currentLine)
                 }
 
               case f: ReadFailure[Line] =>
@@ -250,15 +258,11 @@ class ContextFormat extends LineBasedHunkFormat {
             }
 
           case _ =>
-            ReadFailure(
-              new HunkFormatException("Hunk source header malformed."),
-              reader.currentLine)
+            ReadFailure(new HunkFormatException("Hunk source header malformed."), reader.currentLine)
         }
 
       case _ =>
-        ReadFailure(
-          new HunkFormatException("Hunk header malformed."),
-          reader.currentLine)
+        ReadFailure(new HunkFormatException("Hunk header malformed."), reader.currentLine)
     }
 
     // reads zero or more hunks
@@ -297,15 +301,11 @@ class ContextFormat extends LineBasedHunkFormat {
             }
 
           case _ =>
-            ReadFailure(
-              new HunkFormatException("Target header malformed."),
-              reader.currentLine)
+            ReadFailure(new HunkFormatException("Target header malformed."), reader.currentLine)
         }
 
       case _ =>
-        ReadFailure(
-          new HunkFormatException("Source header malformed."),
-          reader.currentLine)
+        ReadFailure(new HunkFormatException("Source header malformed."), reader.currentLine)
     }
   }
 }

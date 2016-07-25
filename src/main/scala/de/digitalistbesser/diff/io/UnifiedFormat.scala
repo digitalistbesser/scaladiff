@@ -87,31 +87,54 @@ class UnifiedFormat extends LineBasedHunkFormat {
     // reads a sequence of edits
     @tailrec
     def readEdits(
-        builder: mutable.Builder[Edit[TElement], Seq[Edit[TElement]]]): Seq[Edit[TElement]] = reader.currentLine match {
+        expectedSourceEdits: Int,
+        expectedTargetEdits: Int,
+        builder: mutable.Builder[Edit[TElement], Seq[Edit[TElement]]]): ReadResult[Seq[Edit[TElement]], Line] = reader.currentLine match {
+      case Some(Line(LineInsert(_), _)) | Some(Line(LineMatch(_), _)) if expectedTargetEdits == 0 =>
+        ReadFailure(
+          new HunkFormatException("Too many edits in hunk."),
+          reader.currentLine)
+
+      case Some(Line(LineDelete(_), _)) | Some(Line(LineMatch(_), _)) if expectedSourceEdits == 0 =>
+        ReadFailure(
+          new HunkFormatException("Too many edits in hunk."),
+          reader.currentLine)
+
       case Some(Line(LineInsert(e), _)) =>
         builder += Insert(e)
         reader.readLine()
-        readEdits(builder)
+        readEdits(expectedSourceEdits, expectedTargetEdits - 1, builder)
 
       case Some(Line(LineDelete(e), _)) =>
         builder += Delete(e)
         reader.readLine()
-        readEdits(builder)
+        readEdits(expectedSourceEdits - 1, expectedTargetEdits, builder)
 
       case Some(Line(LineMatch(e), _)) =>
         builder += Match(e)
         reader.readLine()
-        readEdits(builder)
+        readEdits(expectedSourceEdits - 1, expectedTargetEdits - 1, builder)
+
+      case _ if expectedSourceEdits > 0 || expectedTargetEdits > 0 =>
+        ReadFailure(
+          new HunkFormatException("Edit(s) missing from hunk."),
+          reader.currentLine)
 
       case _ =>
-        builder.result()
+        ReadSuccess(builder.result())
     }
 
     // reads a single hunk
     def readHunk(): ReadResult[Hunk[TElement], Line] = reader.currentLine match {
-      case Some(Line(HunkHeader(si, _, ti, _), _)) =>
+      case Some(Line(HunkHeader(si, sl, ti, tl), _)) =>
         reader.readLine()
-        ReadSuccess(Hunk(si, ti, readEdits(Seq.newBuilder[Edit[TElement]])))
+        readEdits(sl, tl, Seq.newBuilder[Edit[TElement]]) match {
+          case ReadSuccess(e) =>
+            ReadSuccess(Hunk(si, ti, e))
+
+          case f: ReadFailure[Line] =>
+            f
+        }
 
       case _ =>
         ReadFailure(
