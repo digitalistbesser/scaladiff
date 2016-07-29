@@ -309,12 +309,12 @@ private[io] object NormalFormat {
   private abstract class LineEdit(prefix: Char) {
     /** Formats the value.
       */
-    def apply(value: String): String = s"$prefix$value"
+    def apply(value: String): String = s"$prefix $value"
 
     /** Extracts the value from the edit.
       */
     def unapply(edit: String): Option[String] =
-      if (edit != null && edit.startsWith(s"$prefix")) Some(edit.substring(1))
+      if (edit != null && edit.startsWith(s"$prefix ")) Some(edit.substring(2))
       else None
   }
 

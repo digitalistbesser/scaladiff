@@ -23,47 +23,47 @@ import org.scalatest.Matchers._
 class NormalFormatSpec extends LineBasedHunkFormatSpec {
   private val casing: Seq[String] = List(
     "1,2c1,2",
-    "<ABC",
-    "<XYZ",
+    "< ABC",
+    "< XYZ",
     "---",
-    ">XYZ",
-    ">ABC")
+    "> XYZ",
+    "> ABC")
   private val empty: Seq[String] = Nil
   private val emptySource: Seq[String] = List(
     "0a1,3",
-    ">a",
-    ">b",
-    ">c")
+    "> a",
+    "> b",
+    "> c")
   private val emptyTarget: Seq[String] = List(
     "1,3d0",
-    "<a",
-    "<b",
-    "<c")
+    "< a",
+    "< b",
+    "< c")
   private val multipleHunks: Seq[String] = List(
     "16c16",
-    "<p",
+    "< p",
     "---",
-    ">P",
+    "> P",
     "24c24",
-    "<x",
+    "< x",
     "---",
-    ">X")
+    "> X")
   private val singleHunk: Seq[String] = List(
     "2c2,3",
-    "<b",
+    "< b",
     "---",
-    ">B",
-    ">C")
+    "> B",
+    "> C")
   private val hunkWithMultipleEdits: Seq[String] = List(
     "16c16",
-    "<p",
+    "< p",
     "---",
-    ">P",
+    "> P",
     "20,21c20",
-    "<t",
-    "<u",
+    "< t",
+    "< u",
     "---",
-    ">T")
+    "> T")
   private val format = new NormalFormat with SeqBasedHunkFormat
 
   import format._
@@ -164,14 +164,14 @@ class NormalFormatSpec extends LineBasedHunkFormatSpec {
     }
   }
   it should "fail reading input with invalid source edit" in {
-    val invalidSourceEdit: Seq[String] = this.emptyTarget.take(2) ++: ">b" +: this.emptyTarget.drop(3)
+    val invalidSourceEdit: Seq[String] = this.emptyTarget.take(2) ++: "> b" +: this.emptyTarget.drop(3)
     val result = read(invalidSourceEdit)
     inside(result) { case ReadFailure(_: HunkFormatException, Some(Line(l, 3))) =>
       l should equal (invalidSourceEdit(2))
     }
   }
   it should "fail reading input with invalid target edit" in {
-    val invalidTargetEdit: Seq[String] = this.emptySource.take(2) ++: "<b" +: this.emptySource.drop(3)
+    val invalidTargetEdit: Seq[String] = this.emptySource.take(2) ++: "< b" +: this.emptySource.drop(3)
     val result = read(invalidTargetEdit)
     inside(result) { case ReadFailure(_: HunkFormatException, Some(Line(l, 3))) =>
       l should equal (invalidTargetEdit(2))
@@ -189,12 +189,12 @@ class NormalFormatSpec extends LineBasedHunkFormatSpec {
     }
   }
   it should "fail reading input with additional deletions" in {
-    val invalidSourceEdit: Seq[String] = this.emptyTarget :+ "<d"
+    val invalidSourceEdit: Seq[String] = this.emptyTarget :+ "< d"
     val result1 = read(invalidSourceEdit)
     inside(result1) { case ReadFailure(_: HunkFormatException, Some(Line(l, 5))) =>
       l should equal (invalidSourceEdit(4))
     }
-    val invalidHunk: Seq[String] = this.singleHunk.take(2) ++: "<c" +: this.singleHunk.drop(2)
+    val invalidHunk: Seq[String] = this.singleHunk.take(2) ++: "< c" +: this.singleHunk.drop(2)
     val result2 = read(invalidHunk)
     inside(result2) { case ReadFailure(_: HunkFormatException, Some(Line(l, 3))) =>
         l should equal (invalidHunk(2))
@@ -211,12 +211,12 @@ class NormalFormatSpec extends LineBasedHunkFormatSpec {
     }
   }
   it should "fail reading input with additional insertions" in {
-    val invalidTargetEdit: Seq[String] = this.emptySource:+ ">d"
+    val invalidTargetEdit: Seq[String] = this.emptySource:+ "> d"
     val result1 = read(invalidTargetEdit)
     inside(result1) { case ReadFailure(_: HunkFormatException, Some(Line(l, 5))) =>
       l should equal (invalidTargetEdit(4))
     }
-    val invalidHunk: Seq[String] = this.singleHunk :+ "<D"
+    val invalidHunk: Seq[String] = this.singleHunk :+ "< D"
     val result2 = read(invalidHunk)
     inside(result2) { case ReadFailure(_: HunkFormatException, Some(Line(l, 6))) =>
         l should equal (invalidHunk(5))
