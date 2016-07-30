@@ -40,9 +40,7 @@ trait Diff {
     * @tparam TSeq The sequence type.
     * @tparam TElement The contained element type.
     */
-  implicit class SeqDiffOps[TSeq[TData] <: Seq[TData], TElement : Equiv](
-      source: TSeq[TElement])(implicit
-      asData: AsData[TSeq[TElement], TElement]) {
+  implicit class SeqDiffOps[TSeq[TData] <: Seq[TData], TElement : Equiv](source: TSeq[TElement]) {
     /** Computes the diff between the source and the target sequences.
       */
     def diffTo(target: TSeq[TElement]): Seq[Hunk[TElement]] = diffAlgorithm[TSeq[TElement], TElement].diff(source, target)

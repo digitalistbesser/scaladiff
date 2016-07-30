@@ -21,10 +21,9 @@ import scala.collection.mutable
 
 /** Defines a patch algorithm.
   */
-class PatchAlgorithm[TData, TElement](implicit
+class PatchAlgorithm[TData, TElement : Equiv](implicit
     protected val asSeq: AsSeq[TData, TElement],
-    protected val asData: AsData[TData, TElement],
-    protected val equiv: Equiv[TElement]) {
+    protected val asData: AsData[TData, TElement]) {
   /** Applies the specified hunks to the data.
     *
     * @param data The source data.
