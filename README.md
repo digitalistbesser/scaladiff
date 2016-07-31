@@ -91,21 +91,24 @@ res0: de.digitalistbesser.diff.PatchResult[String,Char] = PatchResult(aBc,...)
 ```
 
 #### Determining Differences
-The diff and patch algorithms determine equality of the elements of the processed sequences through an `Equiv` instance that is implicitly passed to the algorithms' constructors. By default the standard `Equiv` implementation for the element type is used. To alter this behaviour you can create an algorithm instance with an alternative `Equiv` implementation.
+The diff and patch algorithms determine equality of the elements of the processed sequences through an `Equiv` instance that is implicitly passed to the `diff`, `patch` and `unpatch` methods. By default the `Equiv` implementation provided by the Scala language is used. To alter this behaviour you can provide an alternative implementation.
 ```
-scala>import de.digitalistbesser.diff.algorithms.MillerMyersDiffAlgorithm
+scala> import de.digitalistbesser.diff.algorithms.MillerMyersDiffAlgorithm
 import de.digitalistbesser.diff.algorithms.MillerMyersDiffAlgorithm
 
-scala>implicit val equiv = Equiv.fromFunction[Char]((l, r) => l.toLower == r.toLower)
-equiv: scala.math.Equiv[Char] = scala.math.Equiv$$anon$4@7741ae1b
-
-scala>val diff = new MillerMyersDiffAlgorithm[String, Char]
-diff: de.digitalistbesser.diff.algorithms.MillerMyersDiffAlgorithm[String,Char] = de.digitalistbesser.diff.algorithms.MillerMyersDiffAlgorithm@6d4a05f7
+scala> val diff = new MillerMyersDiffAlgorithm[String, Char]
+diff: de.digitalistbesser.diff.algorithms.MillerMyersDiffAlgorithm[String,Char] = de.digitalistbesser.diff.algorithms.MillerMyersDiffAlgorithm@2a2bb0eb
 
 scala> diff.diff("AbC", "aBc")
-res0: Seq[de.digitalistbesser.diff.Hunk[Char]] = List()
+res0: Seq[de.digitalistbesser.diff.Hunk[Char]] = List(Hunk(0,0,List(Delete(A), Delete(b), Delete(C), Insert(a), Insert(B), Insert(c))))
+
+scala> implicit val ignoreCase = Equiv.fromFunction[Char]((l, r) => l.toLower == r.toLower)
+ignoreCase: scala.math.Equiv[Char] = scala.math.Equiv$$anon$4@67110f71
+
+scala> diff.diff("AbC", "aBc")
+res1: Seq[de.digitalistbesser.diff.Hunk[Char]] = List()
 ```
-The resulting list of hunks in the example is empty since the algorithm's `Equiv` instance only compares the lower cases of the characters in the source and target strings.
+The first invocation of `diff` is executed with the system's default `Equiv` implementation for `Char` and returns a non-empty list of changes since the strings differ in case. The second invocation uses the implicitly provided custom implementation that ignores casing. The algorithm deems both strings equal and returns an empty list of changes.
 
 _When patching/unpatching a list of hunks you should use the same equality relation that was used to create the hunks._
 

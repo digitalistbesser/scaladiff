@@ -32,7 +32,8 @@ trait Context[TData, TElement] extends DiffAlgorithm[TData, TElement] {
     */
   override def diff(
       source: TData,
-      target: TData): Seq[Hunk[TElement]] = {
+      target: TData)(implicit
+      equiv: Equiv[TElement]): Seq[Hunk[TElement]] = {
     @tailrec
     def loop(
         seq: Seq[TElement],

@@ -28,13 +28,13 @@ import scala.math._
   * @see https://neil.fraser.name/software/diff_match_patch/myers.pdf
   */
 class MyersSpaceOptimizedDiffAlgorithm[TData, TElement](implicit
-    asSeq: AsSeq[TData, TElement],
-    equiv: Equiv[TElement]) extends DiffAlgorithm[TData, TElement] {
+    asSeq: AsSeq[TData, TElement]) extends DiffAlgorithm[TData, TElement] {
   /** @inheritdoc
     */
   protected def computeDifferences(
       source: Seq[TElement],
-      target: Seq[TElement]): Seq[Difference] = {
+      target: Seq[TElement])(implicit
+      equiv: Equiv[TElement]): Seq[Difference] = {
     val sourceLength = source.length
     val targetLength = target.length
     val delta = sourceLength - targetLength

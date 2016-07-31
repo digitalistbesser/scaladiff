@@ -45,7 +45,7 @@ package object diff {
     with Patch {
     /** @inheritdoc
       */
-    protected def diffAlgorithm[TData, TElement: Equiv](implicit
+    protected def diffAlgorithm[TData, TElement](implicit
         asSeq: AsSeq[TData, TElement]): DiffAlgorithm[TData, TElement] = new MyersSpaceOptimizedDiffAlgorithm[TData, TElement]
       with CommonSuffix[TData, TElement]
       with CommonPrefix[TData, TElement]
@@ -53,7 +53,7 @@ package object diff {
 
     /** @inheritdoc
       */
-    protected def patchAlgorithm[TData, TElement: Equiv](implicit
+    protected def patchAlgorithm[TData, TElement](implicit
         asSeq: AsSeq[TData, TElement],
         asData: AsData[TData, TElement]): PatchAlgorithm[TData, TElement] = new PatchAlgorithm[TData, TElement]
   }

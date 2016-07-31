@@ -20,7 +20,7 @@ import scala.annotation.tailrec
 
 /** Defines a diff algorithm.
  */
-abstract class DiffAlgorithm[TData, TElement : Equiv](implicit
+abstract class DiffAlgorithm[TData, TElement](implicit
     protected val asSeq: AsSeq[TData, TElement]) {
   /** Denotes a difference between the source and the target.
     */
@@ -56,7 +56,8 @@ abstract class DiffAlgorithm[TData, TElement : Equiv](implicit
     */
   def diff(
       source: TData,
-      target: TData): Seq[Hunk[TElement]] = {
+      target: TData)(implicit
+      equiv: Equiv[TElement]): Seq[Hunk[TElement]] = {
     @tailrec
     def loop(
         differences: Seq[Difference],
@@ -102,5 +103,6 @@ abstract class DiffAlgorithm[TData, TElement : Equiv](implicit
     */
   protected def computeDifferences(
       source: Seq[TElement],
-      target: Seq[TElement]): Seq[Difference]
+      target: Seq[TElement])(implicit
+      equiv: Equiv[TElement]): Seq[Difference]
 }

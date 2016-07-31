@@ -16,13 +16,7 @@
 
 package de.digitalistbesser.diff.algorithms
 
-import de.digitalistbesser.diff._
-
 /** Spec implementation for the Myers space optimized diff implementation.
   */
-class MyersSpaceOptimizedDiffAlgorithmSpec extends MyersBaseDiffAlgorithmSpec {
-  /** @inheritdoc
-    */
-  protected def diffAlgorithm(implicit
-      equiv: Equiv[String]): DiffAlgorithm[List[String], String] = new MyersSpaceOptimizedDiffAlgorithm[List[String], String]
-}
+class MyersSpaceOptimizedDiffAlgorithmSpec
+  extends MyersBaseDiffAlgorithmSpec(new MyersSpaceOptimizedDiffAlgorithm[List[String], String])

@@ -25,11 +25,12 @@ trait CommonPrefix[TData, TElement] extends CommonAffix[TData, TElement] {
     */
   override abstract def computeDifferences(
       source: Seq[TElement],
-      target: Seq[TElement]): Seq[Difference] = {
+      target: Seq[TElement])(implicit
+      equiv: Equiv[TElement]): Seq[Difference] = {
     var length = 0
     while (length < source.length &&
         length < target.length &&
-        this.equiv.equiv(source(length), target(length))) {
+        equiv.equiv(source(length), target(length))) {
       length = length + 1
     }
 

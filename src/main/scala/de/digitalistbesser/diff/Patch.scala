@@ -24,7 +24,7 @@ import scala.language.higherKinds
 trait Patch {
   /** @return The patch algorithm implementation used with this instance.
     */
-  protected def patchAlgorithm[TData, TElement : Equiv](implicit
+  protected def patchAlgorithm[TData, TElement](implicit
       asSeq: AsSeq[TData, TElement],
       asData: AsData[TData, TElement]): PatchAlgorithm[TData, TElement]
 
@@ -33,11 +33,15 @@ trait Patch {
   implicit class StringPatchOps(value: String) {
     /** Applies the specified hunks to the string.
       */
-    def patchWith(hunks: Seq[Hunk[Char]]): PatchResult[String, Char] = patchAlgorithm[String, Char].patch(value, hunks)
+    def patchWith(
+        hunks: Seq[Hunk[Char]])(implicit
+        equiv: Equiv[Char]): PatchResult[String, Char] = patchAlgorithm[String, Char].patch(value, hunks)
 
     /** Unapplies the specified hunks from the string.
       */
-    def unpatchWith(hunks: Seq[Hunk[Char]]): PatchResult[String, Char] = patchAlgorithm[String, Char].unpatch(value, hunks)
+    def unpatchWith(
+        hunks: Seq[Hunk[Char]])(implicit
+        equiv: Equiv[Char]): PatchResult[String, Char] = patchAlgorithm[String, Char].unpatch(value, hunks)
   }
 
   /** Wrapper class for patch operations on sequences.
@@ -45,15 +49,19 @@ trait Patch {
     * @tparam TSeq The sequence type.
     * @tparam TElement The contained element type.
     */
-  implicit class SeqPatchOps[TSeq[TData] <: Seq[TData], TElement : Equiv](
+  implicit class SeqPatchOps[TSeq[TData] <: Seq[TData], TElement](
       seq: TSeq[TElement])(implicit
       asData: AsData[TSeq[TElement], TElement]) {
     /** Applies the specified hunks to the sequence.
       */
-    def patchWith(hunks: Seq[Hunk[TElement]]): PatchResult[TSeq[TElement], TElement] = patchAlgorithm[TSeq[TElement], TElement].patch(seq, hunks)
+    def patchWith(
+        hunks: Seq[Hunk[TElement]])(implicit
+        equiv: Equiv[TElement]): PatchResult[TSeq[TElement], TElement] = patchAlgorithm[TSeq[TElement], TElement].patch(seq, hunks)
 
     /** Unapplies the specified hunks from the sequence.
       */
-    def unpatchWith(hunks: Seq[Hunk[TElement]]): PatchResult[TSeq[TElement], TElement] = patchAlgorithm[TSeq[TElement], TElement].unpatch(seq, hunks)
+    def unpatchWith(
+        hunks: Seq[Hunk[TElement]])(implicit
+        equiv: Equiv[TElement]): PatchResult[TSeq[TElement], TElement] = patchAlgorithm[TSeq[TElement], TElement].unpatch(seq, hunks)
   }
 }

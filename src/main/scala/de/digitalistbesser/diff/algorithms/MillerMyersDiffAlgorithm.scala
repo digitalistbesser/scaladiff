@@ -26,13 +26,13 @@ import scala.collection.mutable
   * @see http://onlinelibrary.wiley.com/doi/10.1002/spe.4380151102/abstract
   */
 class MillerMyersDiffAlgorithm[TData, TElement](implicit
-    asSeq: AsSeq[TData, TElement],
-    equiv: Equiv[TElement]) extends DiffAlgorithm[TData, TElement] {
+    asSeq: AsSeq[TData, TElement]) extends DiffAlgorithm[TData, TElement] {
   /** @inheritdoc
     */
   protected def computeDifferences(
       source: Seq[TElement],
-      target: Seq[TElement]): Seq[Difference] = {
+      target: Seq[TElement])(implicit
+      equiv: Equiv[TElement]): Seq[Difference] = {
     val maxRow = source.length
     val maxColumn = target.length
 
@@ -41,7 +41,7 @@ class MillerMyersDiffAlgorithm[TData, TElement](implicit
     def advanceSubSequence(
         row: Int,
         column: Int): (Int, Int) =
-      if (row < maxRow && column < maxColumn && this.equiv.equiv(source(row), target(column)))
+      if (row < maxRow && column < maxColumn && equiv.equiv(source(row), target(column)))
         advanceSubSequence(row + 1, column + 1)
       else
         (row, column)

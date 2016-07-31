@@ -16,13 +16,7 @@
 
 package de.digitalistbesser.diff.algorithms
 
-import de.digitalistbesser.diff._
-
 /** Spec implementation for the Myers greedy diff implementation.
   */
-class MyersGreedyDiffAlgorithmSpec extends MyersBaseDiffAlgorithmSpec {
-  /** @inheritdoc
-    */
-  protected def diffAlgorithm(implicit
-      equiv: Equiv[String]): DiffAlgorithm[List[String], String] = new MyersGreedyDiffAlgorithm[List[String], String]
-}
+class MyersGreedyDiffAlgorithmSpec
+  extends MyersBaseDiffAlgorithmSpec(new MyersGreedyDiffAlgorithm[List[String], String])

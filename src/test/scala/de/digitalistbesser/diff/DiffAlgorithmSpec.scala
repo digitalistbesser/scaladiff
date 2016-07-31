@@ -19,14 +19,12 @@ package de.digitalistbesser.diff
 import org.scalatest._
 
 /** Basic spec for diff algorithm implementations.
+  *
+  * @param diffAlgorithm The instance of the diff algorithm under test.
   */
-abstract class DiffAlgorithmSpec extends FlatSpec {
-  /** Creates an instance of the diff algorithm under test.
-    */
-  protected def diffAlgorithm(implicit
-      equiv: Equiv[String]): DiffAlgorithm[List[String], String]
-
-  diffAlgorithm.getClass.getSimpleName should "provide an empty list of hunks for empty inputs" in {
+abstract class DiffAlgorithmSpec(val diffAlgorithm: DiffAlgorithm[List[String], String])
+  extends FlatSpec {
+  this.diffAlgorithm.getClass.getSimpleName should "provide an empty list of hunks for empty inputs" in {
     val input: List[String] = Nil
     val hunks = this.diffAlgorithm.diff(input, input)
     assert(hunks.isEmpty)
@@ -37,10 +35,13 @@ abstract class DiffAlgorithmSpec extends FlatSpec {
     assert(hunks.isEmpty)
   }
   it should "use the supplied Equiv instance to match the source and target elements" in {
-    implicit val equiv = Equiv.fromFunction[String]((l, r) => l.toLowerCase == r.toLowerCase)
     val source = "abc" :: "XYZ" :: Nil
     val target = "ABC" :: "XyZ" :: Nil
-    val hunks = this.diffAlgorithm.diff(source, target)
-    assert(hunks.isEmpty)
+    val hunks1 = this.diffAlgorithm.diff(source, target)
+    assert(hunks1.nonEmpty)
+
+    implicit val equiv = Equiv.fromFunction[String]((l, r) => l.toLowerCase == r.toLowerCase)
+    val hunks2 = this.diffAlgorithm.diff(source, target)
+    assert(hunks2.isEmpty)
   }
 }

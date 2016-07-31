@@ -21,7 +21,7 @@ import scala.collection.mutable
 
 /** Defines a patch algorithm.
   */
-class PatchAlgorithm[TData, TElement : Equiv](implicit
+class PatchAlgorithm[TData, TElement](implicit
     protected val asSeq: AsSeq[TData, TElement],
     protected val asData: AsData[TData, TElement]) {
   /** Applies the specified hunks to the data.
@@ -32,7 +32,8 @@ class PatchAlgorithm[TData, TElement : Equiv](implicit
     */
   def patch(
       data: TData,
-      hunks: Seq[Hunk[TElement]]): PatchResult[TData, TElement] = this.computePatch(data, hunks)
+      hunks: Seq[Hunk[TElement]])(implicit
+      equiv: Equiv[TElement]): PatchResult[TData, TElement] = this.computePatch(data, hunks)
 
   /** Unapplies the specified hunks from the data.
     *
@@ -42,7 +43,8 @@ class PatchAlgorithm[TData, TElement : Equiv](implicit
     */
   def unpatch(
       data: TData,
-      hunks: Seq[Hunk[TElement]]): PatchResult[TData, TElement] = {
+      hunks: Seq[Hunk[TElement]])(implicit
+      equiv: Equiv[TElement]): PatchResult[TData, TElement] = {
     def invertHunk(hunk: Hunk[TElement]): Hunk[TElement] = Hunk(
       hunk.targetIndex,
       hunk.sourceIndex,
@@ -67,7 +69,8 @@ class PatchAlgorithm[TData, TElement : Equiv](implicit
     */
   protected def computePatch(
       seq: Seq[TElement],
-      hunks: Seq[Hunk[TElement]]): PatchResult[TData, TElement] = {
+      hunks: Seq[Hunk[TElement]])(implicit
+      equiv: Equiv[TElement]): PatchResult[TData, TElement] = {
     @tailrec
     def loop(
         seq: Seq[TElement],
@@ -117,5 +120,6 @@ class PatchAlgorithm[TData, TElement : Equiv](implicit
   protected def computeOffset(
       seq: Seq[TElement],
       edits: Seq[Edit[TElement]],
-      offset: Int): Option[Int] = Some(offset)
+      offset: Int)(implicit
+      equiv: Equiv[TElement]): Option[Int] = Some(offset)
 }

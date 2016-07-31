@@ -22,7 +22,8 @@ import org.scalatest.Matchers._
 
 /** Basic spec implementation for diff implementations after Myers.
   */
-abstract class MyersBaseDiffAlgorithmSpec extends DiffAlgorithmSpec {
+abstract class MyersBaseDiffAlgorithmSpec(diffAlgorithm: DiffAlgorithm[List[String], String])
+  extends DiffAlgorithmSpec(diffAlgorithm) {
   it should "provide an insertion for a target with an additional entry" in {
     val source = "abc" :: "123" :: Nil
 

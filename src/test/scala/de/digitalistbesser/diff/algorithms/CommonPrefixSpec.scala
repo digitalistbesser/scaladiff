@@ -21,20 +21,18 @@ import org.scalatest.FlatSpec
 
 /** Spec implementation for the common prefix trait implementation.
   */
-class CommonPrefixSpec
-  extends FlatSpec {
+class CommonPrefixSpec extends FlatSpec {
   /** Tests whether the common prefix is stripped properly.
     */
   private class DummyDiffAlgorithm(
       expectedSource: Seq[Char],
-      expectedTarget: Seq[Char])(implicit
-      equiv: Equiv[Char])
-    extends DiffAlgorithm[String, Char] {
-    /** Checks the the supplied sequences against the expected ones.
+      expectedTarget: Seq[Char]) extends DiffAlgorithm[String, Char] {
+    /** Checks the supplied sequences against the expected ones.
       */
     protected def computeDifferences(
         source: Seq[Char],
-        target: Seq[Char]): Seq[Difference] =  {
+        target: Seq[Char])(implicit
+        equiv: Equiv[Char]): Seq[Difference] = {
       assert(expectedSource == source)
       assert(expectedTarget == target)
 
@@ -57,8 +55,8 @@ class CommonPrefixSpec
     diffAlgorithm.diff("123 abcde", "123 xyz")
   }
   it should "use the supplied Equiv instance to match the source and target elements" in {
-    implicit val equiv = Equiv.fromFunction[Char]((l, r) => l.toLower == r.toLower)
     val diffAlgorithm = new DummyDiffAlgorithm("abcde", "xyz") with CommonPrefix[String, Char]
+    implicit val equiv = Equiv.fromFunction[Char]((l, r) => l.toLower == r.toLower)
     diffAlgorithm.diff("aBc abcde", "abC xyz")
   }
 }
