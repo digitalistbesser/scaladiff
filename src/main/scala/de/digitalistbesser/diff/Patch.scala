@@ -18,6 +18,7 @@ package de.digitalistbesser.diff
 
 import scala.collection._
 import scala.language.higherKinds
+import scala.reflect.ClassTag
 
 /** Provides utilities for patching data.
   */
@@ -42,6 +43,22 @@ trait Patch {
     def unpatchWith(
         hunks: Seq[Hunk[Char]])(implicit
         equiv: Equiv[Char]): PatchResult[String, Char] = patchAlgorithm[String, Char].unpatch(value, hunks)
+  }
+
+  /** Wrapper class for patch operations on arrays.
+    */
+  implicit class ArrayPatchOps[TElement : ClassTag](value: Array[TElement]) {
+    /** Applies the specified hunks to the array.
+      */
+    def patchWith(
+        hunks: Seq[Hunk[TElement]])(implicit
+        equiv: Equiv[TElement]): PatchResult[Array[TElement], TElement] = patchAlgorithm[Array[TElement], TElement].patch(value, hunks)
+
+    /** Unapplies the specified hunks from the array.
+      */
+    def unpatchWith(
+        hunks: Seq[Hunk[TElement]])(implicit
+        equiv: Equiv[TElement]): PatchResult[Array[TElement], TElement] = patchAlgorithm[Array[TElement], TElement].unpatch(value, hunks)
   }
 
   /** Wrapper class for patch operations on sequences.

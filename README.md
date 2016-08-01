@@ -78,7 +78,7 @@ The sole patch implementation is located in `de.digitalistbesser.diff.PatchAlgor
 The diff and patch implementations work on `Seq`. To use the algorithms with custom data structures an implicit conversion that converts the data into a `Seq` must be specified when a diff algorithm is instantiated. A corresponding patch algorithm furthermore needs an implicit `scala.collections.mutable.Builder` instance for the data type.
 
 #### Diffs for Strings
-Scaladiff provides implicit conversions that enable diffing and patching of Strings that are treated as `Seq[Char]`.
+Scaladiff provides implicit conversions that enable diffing and patching of strings that are treated as `Seq[Char]`.
 ```
 scala> import de.digitalistbesser.diff.default._
 import de.digitalistbesser.diff.default._
@@ -88,6 +88,22 @@ hunks: Seq[de.digitalistbesser.diff.Hunk[Char]] = List(Hunk(0,0,List(Delete(A), 
 
 scala> "AbC" patchWith hunks
 res0: de.digitalistbesser.diff.PatchResult[String,Char] = PatchResult(aBc,...)
+```
+
+#### Diffs for Arrays
+Scaladiff provides implicit conversions that enable diffing and patching of arrays.
+```
+scala> import de.digitalistbesser.diff.default._
+import de.digitalistbesser.diff.default._
+
+scala> val hunks = Array(1, 2, 3) diffTo Array(2, 3, 4)
+hunks: Seq[de.digitalistbesser.diff.Hunk[Int]] = List(Hunk(0,0,List(Delete(1), Match(2), Match(3), Insert(4))))
+
+scala> Array(1, 2, 3) patchWith hunks
+res0: de.digitalistbesser.diff.PatchResult[Array[Int],Int] = PatchResult([I@39d77de9,...))
+
+scala> res0.data
+res4: Array[Int] = Array(2, 3, 4)
 ```
 
 #### Determining Differences
