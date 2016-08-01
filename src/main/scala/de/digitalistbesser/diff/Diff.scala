@@ -37,6 +37,16 @@ trait Diff {
         equiv: Equiv[Char]): Seq[Hunk[Char]] = diffAlgorithm[String, Char].diff(source, target)
   }
 
+  /** Wrapper class for diff operations on arrays.
+    */
+  implicit class ArrayDiffOps[TElement](source: Array[TElement]) {
+    /** Computes the diff between the source and the target sequences.
+      */
+    def diffTo(
+        target: Array[TElement])(implicit
+        equiv: Equiv[TElement]): Seq[Hunk[TElement]] = diffAlgorithm[Array[TElement], TElement].diff(source, target)
+  }
+
   /** Wrapper class for diff operations on sequences.
     *
     * @tparam TSeq The sequence type.
