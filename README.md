@@ -110,6 +110,22 @@ res1: Seq[de.digitalistbesser.diff.Hunk[Char]] = List()
 ```
 The first invocation of `diff` is executed with the system's default `Equiv` implementation for `Char` and returns a non-empty list of changes since the strings differ in case. The second invocation uses the implicitly provided custom implementation that ignores casing. The algorithm deems both strings equal and returns an empty list of changes.
 
+The same applies when the convenience methods `diffTo`, `patchWith` and `unpatchWith`.
+```
+scala> import de.digitalistbesser.diff.default._
+import de.digitalistbesser.diff.default._
+
+scala> "AbC" diffTo "aBc"
+res0: Seq[de.digitalistbesser.diff.Hunk[Char]] = List(Hunk(0,0,List(Delete(A), Delete(b), Delete(C), Insert(a), Insert(B), Insert(c))))
+
+scala> implicit val ignoreCase = Equiv.fromFunction[Char]((l, r) => l.toLower == r.toLower)
+ignoreCase: scala.math.Equiv[Char] = scala.math.Equiv$$anon$4@5dbf5634
+
+scala> "AbC" diffTo "aBc"
+
+res1: Seq[de.digitalistbesser.diff.Hunk[Char]] = List()
+```
+
 _When patching/unpatching a list of hunks you should use the same equality relation that was used to create the hunks._
 
 ### Saving and Loading Diffs
@@ -196,6 +212,65 @@ The normal format also doesn't support context. All context information is strip
 2d2
 < abc
 ```
+
+#### Output and Input Formatting
+The `read` and `write` methods of the formats rely on implicitly provided functions that transform the hunks from and to the output format respectively. The previous example used the identity function since the input and output data were strings.
+
+Custom transformation functions can be provided as implicit values.
+```
+scala> // imports of diff & creation of writer as before
+
+scala> val hunks = Vector[Byte](0, 1, 2, 4, 8, 16, 31, 64) diffTo Vector[Byte](0, 1, 2, 4, 8, 16, 32, 64)
+hunks: Seq[de.digitalistbesser.diff.Hunk[Byte]] = List(Hunk(3,3,List(Match(4), Match(8), Match(16), Delete(31), Insert(32), Match(64))))
+
+scala> import de.digitalistbesser.diff.io.unified._
+import de.digitalistbesser.diff.io.unified._
+
+scala> write(writer, HunkData("sourceHeader", "targetHeader", hunks))
+<console>:21: error: No implicit view available from Byte => String.
+       write(writer, HunkData("sourceHeader", "targetHeader", hunks))
+            ^
+
+scala> implicit val byte2String: Byte => String = "0x%02X" format _
+byte2String: Byte => String = <function1>
+
+scala> write(writer, HunkData("sourceHeader", "targetHeader", hunks))
+res0: de.digitalistbesser.diff.io.WriteResult = WriteSuccess
+
+scala> writer.close()
+```
+The first attempt to write the hunks fails since no matching conversion from `Byte` to `String` can be found. The second attempt uses the custom implementation. The result looks like this.
+```
+--- sourceHeader
++++ targetHeader
+@@ -4,5 +4,5 @@
+ 0x04
+ 0x08
+ 0x10
+-0x1F
++0x20
+ 0x40
+```
+To read the hunks in the correct format another transformation function is necessary. Furthermore the target type needs to be specified when invoking `read`.
+```
+scala> // imports & creation of reader as before
+
+scala> read(reader)
+res1: de.digitalistbesser.diff.io.ReadResult[de.digitalistbesser.diff.io.unified.Data[String],de.digitalistbesser.diff.io.unified.Line] = ReadSuccess(HunkData(sourceHeader,targetHeader,List(Hunk(3,3,List(Match(0x04), Match(0x08), Match(0x10), Delete(0x1F), Insert(0x20), Match(0x40))))))
+
+scala> reader.close()
+
+scala> // create new reader
+
+scala> implicit val string2Byte: String => Byte = s => java.lang.Integer.parseInt(s.substring(2), 16).toByte
+string2Byte: String => Byte = <function1>
+
+scala> read[Byte](reader)
+res2: de.digitalistbesser.diff.io.ReadResult[de.digitalistbesser.diff.io.unified.Data[Byte],de.digitalistbesser.diff.io.unified.Line] = ReadSuccess(HunkData(sourceHeader,targetHeader,List(Hunk(3,3,List(Match(4), Match(8), Match(16), Delete(31), Insert(32), Match(64))))))
+
+scala> reader.close()
+```
+The first invocation again uses the identity function and yields hunks of type `String`. The second invocation explicitly specifies the output type `Byte` and the provided transformation is used. The result fits the source and target sequences and can be used to patch or unpatch the them.
 
 ## Performance Considerations
 _At the moment no special performance enhancements and benchmarks are implemented._
