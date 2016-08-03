@@ -8,12 +8,12 @@ _At the moment there are no Maven artifacts available._ To give it a try you hav
 ### Creating and Using a Diff
 #### The Default Diff and Patch Implementations
 The default diff and patch implementations are imported via the following statement.
-```
+```scala
 scala> import de.digitalistbesser.diff.default._
 import de.digitalistbesser.diff.default._
 ```
 Afterwards you can create the diff for a source and target sequence by invoking `diffTo` on the source (unfortunately Scala sequences already contain a `diff` method so we have to go with the somewhat ugly `diffTo`).
-```
+```scala
 scala> val source = Vector("123", "abc")
 source: scala.collection.immutable.Vector[String] = Vector(123, abc)
 
@@ -26,14 +26,14 @@ hunks: Seq[de.digitalistbesser.diff.Hunk[String]] = List(Hunk(0,0,List(Insert(AB
 `diffTo` returns a sequence of hunks necessary to transform the source into the target or an empty sequence if the sequences are considered equal. Each hunk contains information about its location in the source and target sequences and the edits necessary to transform one into the other.
 
 Invoke `patchWith` to apply the hunks to the source (as with `diff` Scala sequences unfortunately already contain a `patch` method themselves).
-```
+```scala
 scala> source patchWith hunks
 res0: de.digitalistbesser.diff.PatchResult[scala.collection.immutable.Vector[String],String] = PatchResult(Vector(ABC, 123),...)
 ```
 The method returns a `PatchResult` that contains the resulting sequence (which should equal the target) and some additional data (omitted in the example output and not further discussed here).
 
 The target sequence can also be unpatched by invoking the `unpatchWith` method on the target with the corresponding hunks (although there is no `unpatch` method in Scala sequences the method is named `unpatchWith` in conformance with `patchWith`).
-```
+```scala
 scala> target unpatchWith hunks
 res1: de.digitalistbesser.diff.PatchResult[scala.collection.immutable.Vector[String],String] = PatchResult(Vector(123, abc),...)
 ```
@@ -52,7 +52,7 @@ The aforementioned `de.digitalistbesser.diff.default._` import provides a conven
 | `Context` trait | The diff algorithm implementations only return information about the necessary deletions and insertions. Mix in this trait to add additional context information that can be used to better determine the actual position of the edits while patching. The context size defaults to 3 but can be adjusted in a custom instance by overriding the `contextSize` field. |
 
 A custom implementation is created by instantiating an algorithm and a combination of the available traits.
-```
+```scala
 scala> import de.digitalistbesser.diff.algorithms._
 import de.digitalistbesser.diff.algorithms._
 
@@ -75,11 +75,11 @@ The default implementation uses the `MyersSpaceOptimizedDiffAlgorithm` with the 
 The sole patch implementation is located in `de.digitalistbesser.diff.PatchAlgorithm`.
 
 #### Diffs for Custom Data
-The diff and patch implementations work on `Seq`. To use the algorithms with custom data structures an implicit conversion that converts the data into a `Seq` must be specified when a diff algorithm is instantiated. A corresponding patch algorithm furthermore needs an implicit `scala.collections.mutable.Builder` instance for the data type.
+The diff and patch implementations work on `Seq`. To use the algorithms with custom data structures an implicit conversion that converts the data into a `Seq` must be specified when a diff algorithm is instantiated. A corresponding patch algorithm furthermore needs an implicit `scala.collections.generic.CanBuildFrom` instance for the data type.
 
 #### Diffs for Strings
 Scaladiff provides implicit conversions that enable diffing and patching of strings that are treated as `Seq[Char]`.
-```
+```scala
 scala> import de.digitalistbesser.diff.default._
 import de.digitalistbesser.diff.default._
 
@@ -92,7 +92,7 @@ res0: de.digitalistbesser.diff.PatchResult[String,Char] = PatchResult(aBc,...)
 
 #### Diffs for Arrays
 Scaladiff provides implicit conversions that enable diffing and patching of arrays.
-```
+```scala
 scala> import de.digitalistbesser.diff.default._
 import de.digitalistbesser.diff.default._
 
@@ -103,12 +103,12 @@ scala> Array(1, 2, 3) patchWith hunks
 res0: de.digitalistbesser.diff.PatchResult[Array[Int],Int] = PatchResult([I@39d77de9,...))
 
 scala> res0.data
-res4: Array[Int] = Array(2, 3, 4)
+res0: Array[Int] = Array(2, 3, 4)
 ```
 
 #### Determining Differences
 The diff and patch algorithms determine equality of the elements of the processed sequences through an `Equiv` instance that is implicitly passed to the `diff`, `patch` and `unpatch` methods. By default the `Equiv` implementation provided by the Scala language is used. To alter this behaviour you can provide an alternative implementation.
-```
+```scala
 scala> import de.digitalistbesser.diff.algorithms.MillerMyersDiffAlgorithm
 import de.digitalistbesser.diff.algorithms.MillerMyersDiffAlgorithm
 
@@ -118,7 +118,7 @@ diff: de.digitalistbesser.diff.algorithms.MillerMyersDiffAlgorithm[String,Char] 
 scala> diff.diff("AbC", "aBc")
 res0: Seq[de.digitalistbesser.diff.Hunk[Char]] = List(Hunk(0,0,List(Delete(A), Delete(b), Delete(C), Insert(a), Insert(B), Insert(c))))
 
-scala> implicit val ignoreCase = Equiv.fromFunction[Char]((l, r) => l.toLower == r.toLower)
+scala> implicit val ignoreCase = Equiv.fromFunction[Char](_.toLower == _.toLower)
 ignoreCase: scala.math.Equiv[Char] = scala.math.Equiv$$anon$4@67110f71
 
 scala> diff.diff("AbC", "aBc")
@@ -127,14 +127,14 @@ res1: Seq[de.digitalistbesser.diff.Hunk[Char]] = List()
 The first invocation of `diff` is executed with the system's default `Equiv` implementation for `Char` and returns a non-empty list of changes since the strings differ in case. The second invocation uses the implicitly provided custom implementation that ignores casing. The algorithm deems both strings equal and returns an empty list of changes.
 
 The same applies for the convenience methods `diffTo`, `patchWith` and `unpatchWith`.
-```
+```scala
 scala> import de.digitalistbesser.diff.default._
 import de.digitalistbesser.diff.default._
 
 scala> "AbC" diffTo "aBc"
 res0: Seq[de.digitalistbesser.diff.Hunk[Char]] = List(Hunk(0,0,List(Delete(A), Delete(b), Delete(C), Insert(a), Insert(B), Insert(c))))
 
-scala> implicit val ignoreCase = Equiv.fromFunction[Char]((l, r) => l.toLower == r.toLower)
+scala> implicit val ignoreCase = Equiv.fromFunction[Char](_.toLower == _.toLower)
 ignoreCase: scala.math.Equiv[Char] = scala.math.Equiv$$anon$4@5dbf5634
 
 scala> "AbC" diffTo "aBc"
@@ -149,7 +149,7 @@ Scaladiff provides implementations for reading and writing the unified, context,
 
 #### Unified Format
 The following listing showcases how to write a sequence of hunks in the unified format. 
-```
+```scala
 scala> import de.digitalistbesser.diff.default._
 import de.digitalistbesser.diff.default._
 
@@ -171,7 +171,7 @@ res0: de.digitalistbesser.diff.io.WriteResult = WriteSuccess
 scala> writer.close()
 ```
 The source and target headers used by the unified format are passed along with the hunks to the `write` method in a `HunkData` instance. The method returns the `WriteSuccess` object on success and a `WriteFailed` instance with the exception if the write operation failed. A successful write of the previous example results in the following output.
-```
+```udiff
 --- sourceHeader
 +++ targetHeader
 @@ -1,2 +1,2 @@
@@ -182,7 +182,7 @@ The source and target headers used by the unified format are passed along with t
 The source and target header are written as specified in the `HunkData` instance. All custom formatting must be done by the caller.
 
 Reading hunks is done through the `read` method.
-```
+```scala
 scala> import java.io.{BufferedReader, FileReader}
 import java.io.{BufferedReader, FileReader}
 
@@ -217,7 +217,7 @@ The same rules as for the unified format also apply for the context format. The 
 To read and write diffs in the normal format use `import de.digitalistbesser.diff.io.normal._`.
 
 The normal format doesn't support source and target headers. Therefore the `HunkData` for this format only contains the hunks.
-```
+```scala
 scala> write(writer, HunkData(hunks))
 res0: de.digitalistbesser.diff.io.WriteResult = WriteSuccess
 ```
@@ -233,7 +233,7 @@ The normal format also doesn't support context. All context information is strip
 The `read` and `write` methods of the formats rely on implicitly provided functions that transform the hunks from and to the output format respectively. The previous example used the identity function since the input and output data were strings.
 
 Custom transformation functions can be provided as implicit values.
-```
+```scala
 scala> // imports of diff & creation of writer as before
 
 scala> val hunks = Vector[Byte](0, 1, 2, 4, 8, 16, 31, 64) diffTo Vector[Byte](0, 1, 2, 4, 8, 16, 32, 64)
@@ -256,7 +256,7 @@ res0: de.digitalistbesser.diff.io.WriteResult = WriteSuccess
 scala> writer.close()
 ```
 The first attempt to write the hunks fails since no matching conversion from `Byte` to `String` can be found. The second attempt uses the custom implementation. The result looks like this.
-```
+```udiff
 --- sourceHeader
 +++ targetHeader
 @@ -4,5 +4,5 @@
@@ -268,7 +268,7 @@ The first attempt to write the hunks fails since no matching conversion from `By
  0x40
 ```
 To read the hunks in the correct format another transformation function is necessary. Furthermore the target type needs to be specified when invoking `read`.
-```
+```scala
 scala> // imports & creation of reader as before
 
 scala> read(reader)
@@ -286,7 +286,7 @@ res2: de.digitalistbesser.diff.io.ReadResult[de.digitalistbesser.diff.io.unified
 
 scala> reader.close()
 ```
-The first invocation again uses the identity function and yields hunks of type `String`. The second invocation explicitly specifies the output type `Byte` and the provided transformation is used. The result fits the source and target sequences and can be used to patch or unpatch the them.
+The first invocation again uses the identity function and yields hunks of type `String`. The second invocation explicitly specifies the output type `Byte` and the provided transformation is used. The result fits the source and target sequences and can be used to patch or unpatch them.
 
 ## Performance Considerations
 _At the moment no special performance enhancements and benchmarks are implemented._
