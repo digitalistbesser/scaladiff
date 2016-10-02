@@ -14,13 +14,11 @@
  * limitations under the License.
  */
 
-package de.digitalistbesser.diff
+package de.digitalistbesser.diff.algorithms
 
-/** The result of a patch operation.
-  *
-  * @param result The resulting data.
-  * @param operations A sequence of operations that were performed with the patched hunks.
+import de.digitalistbesser.diff.{PatchAlgorithm, PatchAlgorithmSpec}
+
+/** Spec implementation for the patch algorithm without matching of hunk positions.
   */
-final case class PatchResult[TData, TElement](
-    result: TData,
-    operations: Seq[PatchOperation[TElement]])
+class NoMatchSpec
+  extends PatchAlgorithmSpec(new PatchAlgorithm[String, Char] with NoMatch[String, Char])

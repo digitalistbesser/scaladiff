@@ -18,13 +18,18 @@ package de.digitalistbesser.diff
 
 import org.scalatest._
 
+import scala.reflect.runtime.universe._
+
 /** Basic spec for diff algorithm implementations.
   *
   * @param diffAlgorithm The instance of the diff algorithm under test.
   */
-abstract class DiffAlgorithmSpec(val diffAlgorithm: DiffAlgorithm[List[String], String])
+abstract class DiffAlgorithmSpec[TDiff <: DiffAlgorithm[List[String], String] : TypeTag](
+    val diffAlgorithm: TDiff)
   extends FlatSpec {
-  this.diffAlgorithm.getClass.getSimpleName should "provide an empty list of hunks for empty inputs" in {
+  import Util._
+
+  simpleTypeName[TDiff] should "provide an empty list of hunks for empty inputs" in {
     val input: List[String] = Nil
     val hunks = this.diffAlgorithm.diff(input, input)
     assert(hunks.isEmpty)

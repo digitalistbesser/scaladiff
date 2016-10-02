@@ -20,10 +20,14 @@ import org.scalatest.Inside._
 import org.scalatest.Matchers._
 import org.scalatest._
 
+import scala.annotation.tailrec
+import scala.reflect.runtime.universe._
+
 /** Specification implementation for patch algorithms.
   */
-class PatchAlgorithmSpec
-  extends FunSuite {
+abstract class PatchAlgorithmSpec[TPatch <: PatchAlgorithm[String, Char] : TypeTag](
+    val patchAlgorithm: TPatch)
+  extends FlatSpec {
   private val combinations = List(
     SourceTargetCombination("abc", "abc", Seq.empty[Hunk[Char]]),
     SourceTargetCombination("abc", "Abc", Seq(Hunk(0, 0, Seq(Delete('a'), Insert('A'))))),
@@ -59,7 +63,6 @@ class PatchAlgorithmSpec
     SourceTargetCombination("abc", "b", Seq(Hunk(0, 0, Seq(Delete('a'), Match('b'), Delete('c'))))),
     SourceTargetCombination("abc", "a", Seq(Hunk(0, 0, Seq(Match('a'), Delete('b'), Delete('c')))))
   )
-  private val patchAlgorithm = new PatchAlgorithm[String, Char]
 
   /** A combination of a source and a target value.
     */
@@ -68,35 +71,47 @@ class PatchAlgorithmSpec
       target: String,
       hunks: Seq[Hunk[Char]])
 
-  this.combinations.foreach { case SourceTargetCombination(source, target, hunks) =>
-    def assertAllHunksApplied(
+  /** A suite that tests patching and unpatching the supplied combinations of source and target values.
+    */
+  override def nestedSuites = Vector(new FunSuite {
+    /** Returns the simple type name for the algorithm under test.
+      */
+    override def suiteName = Util.simpleTypeName[TPatch]
+
+    /** Checks whether all of the hunks were used in the operations.
+      */
+    @tailrec
+    private def assertAllHunksUsed(
         hunks: Seq[Hunk[Char]],
-        results: Map[Hunk[Char], HunkResult]): Unit = hunks.foreach { h =>
-      assert(results.getOrElse(h, fail()) == Applied(h.sourceIndex))
+        operations: Seq[PatchOperation[Char]]): Unit = (hunks, operations) match {
+      case (Seq(h, ht @ _*), Seq(Applied(e, o), ot @ _*)) =>
+        assert(h == e)
+        assert(o.offset == 0)
+        this.assertAllHunksUsed(ht, ot)
+
+      case _ =>
+        assert(hunks.isEmpty)
+        assert(operations.isEmpty)
     }
 
-    test(s"${patchAlgorithm.getClass.getSimpleName} should yield '$target' for patching '$source' with $hunks") {
-      val result = this.patchAlgorithm.patch(source, hunks)
-      inside(result) { case PatchResult(d, m) =>
-        d should equal (target)
-        assertAllHunksApplied(hunks, m)
+    PatchAlgorithmSpec.this.combinations.foreach { case SourceTargetCombination(source, target, hunks) =>
+      test(s"should yield '$target' for patching '$source' with $hunks") {
+        val result = PatchAlgorithmSpec.this.patchAlgorithm.patch(source, hunks)
+        inside(result) { case PatchResult(r, o) =>
+          r should equal (target)
+          this.assertAllHunksUsed(hunks, o)
+        }
       }
     }
-  }
 
-  this.combinations.foreach { case SourceTargetCombination(source, target, hunks) =>
-    def assertAllHunksUnapplied(
-        hunks: Seq[Hunk[Char]],
-        results: Map[Hunk[Char], HunkResult]): Unit = hunks.foreach { h =>
-      assert(results.getOrElse(h, fail()) == Applied(h.targetIndex))
-    }
-
-    test(s"${patchAlgorithm.getClass.getSimpleName} should yield '$source' for unpatching '$target' with $hunks") {
-      val result = this.patchAlgorithm.unpatch(target, hunks)
-      inside(result) { case PatchResult(s, m) =>
-        s should equal (source)
-        assertAllHunksUnapplied(hunks, m)
+    PatchAlgorithmSpec.this.combinations.foreach { case SourceTargetCombination(source, target, hunks) =>
+      test(s"should yield '$source' for unpatching '$target' with $hunks") {
+        val result = PatchAlgorithmSpec.this.patchAlgorithm.unpatch(target, hunks)
+        inside(result) { case PatchResult(r, o) =>
+          r should equal (source)
+          this.assertAllHunksUsed(hunks, o)
+        }
       }
     }
-  }
+  })
 }

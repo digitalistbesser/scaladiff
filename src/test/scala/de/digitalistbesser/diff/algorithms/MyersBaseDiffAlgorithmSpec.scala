@@ -20,9 +20,12 @@ import de.digitalistbesser.diff._
 import org.scalatest.Inside._
 import org.scalatest.Matchers._
 
+import scala.reflect.runtime.universe._
+
 /** Basic spec implementation for diff implementations after Myers.
   */
-abstract class MyersBaseDiffAlgorithmSpec(diffAlgorithm: DiffAlgorithm[List[String], String])
+abstract class MyersBaseDiffAlgorithmSpec[TDiff <: DiffAlgorithm[List[String], String] : TypeTag](
+    diffAlgorithm: TDiff)
   extends DiffAlgorithmSpec(diffAlgorithm) {
   it should "provide an insertion for a target with an additional entry" in {
     val source = "abc" :: "123" :: Nil

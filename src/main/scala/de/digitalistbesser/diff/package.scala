@@ -56,5 +56,6 @@ package object diff {
     protected def patchAlgorithm[TData, TElement](implicit
         asSeq: AsSeq[TData, TElement],
         asData: AsData[TData, TElement]): PatchAlgorithm[TData, TElement] = new PatchAlgorithm[TData, TElement]
+      with ContextMatch[TData, TElement]
   }
 }

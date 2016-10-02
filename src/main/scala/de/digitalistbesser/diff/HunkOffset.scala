@@ -16,11 +16,10 @@
 
 package de.digitalistbesser.diff
 
-/** The result of a patch operation.
-  *
-  * @param result The resulting data.
-  * @param operations A sequence of operations that were performed with the patched hunks.
+/** Denotes the offset information of an applied hunk.
   */
-final case class PatchResult[TData, TElement](
-    result: TData,
-    operations: Seq[PatchOperation[TElement]])
+abstract class HunkOffset[+TElement] {
+  /** The offset to the corresponding hunk's source index when applied to some source data.
+    */
+  val offset: Int
+}

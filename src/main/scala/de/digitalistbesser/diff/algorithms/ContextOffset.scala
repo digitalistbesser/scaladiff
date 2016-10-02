@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-package de.digitalistbesser.diff
+package de.digitalistbesser.diff.algorithms
 
-/** The result of a patch operation.
+import de.digitalistbesser.diff.HunkOffset
+
+/** Provides information on the applied offset and used fuzz.
   *
-  * @param result The resulting data.
-  * @param operations A sequence of operations that were performed with the patched hunks.
+  * @param fuzz The fuzz used to apply the corresponding hunk.
   */
-final case class PatchResult[TData, TElement](
-    result: TData,
-    operations: Seq[PatchOperation[TElement]])
+case class ContextOffset(offset: Int, fuzz: Int) extends HunkOffset[Nothing]

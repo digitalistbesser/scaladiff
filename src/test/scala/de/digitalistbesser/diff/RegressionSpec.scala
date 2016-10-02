@@ -29,126 +29,177 @@ class RegressionSpec
   /** The algorithm combinations under test.
     */
   private val combinations = List(
-    new DiffPatchCombination(
+    DiffPatchCombination(
       new MillerMyersDiffAlgorithm[Vector[String], String],
-      new PatchAlgorithm[Vector[String], String]),
-    new DiffPatchCombination(
+      new PatchAlgorithm[Vector[String], String] with NoMatch[Vector[String], String]),
+    DiffPatchCombination(
+      new MillerMyersDiffAlgorithm[Vector[String], String],
+      new PatchAlgorithm[Vector[String], String] with ContextMatch[Vector[String], String]),
+    DiffPatchCombination(
       new MillerMyersDiffAlgorithm[Vector[String], String] with CommonPrefix[Vector[String], String],
-      new PatchAlgorithm[Vector[String], String]),
-    new DiffPatchCombination(
+      new PatchAlgorithm[Vector[String], String] with NoMatch[Vector[String], String]),
+    DiffPatchCombination(
+      new MillerMyersDiffAlgorithm[Vector[String], String] with CommonPrefix[Vector[String], String],
+      new PatchAlgorithm[Vector[String], String] with ContextMatch[Vector[String], String]),
+    DiffPatchCombination(
       new MillerMyersDiffAlgorithm[Vector[String], String] with CommonSuffix[Vector[String], String],
-      new PatchAlgorithm[Vector[String], String]),
-    new DiffPatchCombination(
+      new PatchAlgorithm[Vector[String], String] with NoMatch[Vector[String], String]),
+    DiffPatchCombination(
+      new MillerMyersDiffAlgorithm[Vector[String], String] with CommonSuffix[Vector[String], String],
+      new PatchAlgorithm[Vector[String], String] with ContextMatch[Vector[String], String]),
+    DiffPatchCombination(
       new MillerMyersDiffAlgorithm[Vector[String], String] with CommonSuffix[Vector[String], String] with CommonPrefix[Vector[String], String],
-      new PatchAlgorithm[Vector[String], String]),
-    new DiffPatchCombination(
+      new PatchAlgorithm[Vector[String], String] with NoMatch[Vector[String], String]),
+    DiffPatchCombination(
+      new MillerMyersDiffAlgorithm[Vector[String], String] with CommonSuffix[Vector[String], String] with CommonPrefix[Vector[String], String],
+      new PatchAlgorithm[Vector[String], String] with ContextMatch[Vector[String], String]),
+    DiffPatchCombination(
       new MillerMyersDiffAlgorithm[Vector[String], String] with Context[Vector[String], String],
-      new PatchAlgorithm[Vector[String], String]),
-    new DiffPatchCombination(
+      new PatchAlgorithm[Vector[String], String] with NoMatch[Vector[String], String]),
+    DiffPatchCombination(
+      new MillerMyersDiffAlgorithm[Vector[String], String] with Context[Vector[String], String],
+      new PatchAlgorithm[Vector[String], String] with ContextMatch[Vector[String], String]),
+    DiffPatchCombination(
       new MillerMyersDiffAlgorithm[Vector[String], String] with CommonPrefix[Vector[String], String] with Context[Vector[String], String],
-      new PatchAlgorithm[Vector[String], String]),
-    new DiffPatchCombination(
+      new PatchAlgorithm[Vector[String], String] with NoMatch[Vector[String], String]),
+    DiffPatchCombination(
+      new MillerMyersDiffAlgorithm[Vector[String], String] with CommonPrefix[Vector[String], String] with Context[Vector[String], String],
+      new PatchAlgorithm[Vector[String], String] with ContextMatch[Vector[String], String]),
+    DiffPatchCombination(
       new MillerMyersDiffAlgorithm[Vector[String], String] with CommonSuffix[Vector[String], String] with Context[Vector[String], String],
-      new PatchAlgorithm[Vector[String], String]),
-    new DiffPatchCombination(
+      new PatchAlgorithm[Vector[String], String] with NoMatch[Vector[String], String]),
+    DiffPatchCombination(
+      new MillerMyersDiffAlgorithm[Vector[String], String] with CommonSuffix[Vector[String], String] with Context[Vector[String], String],
+      new PatchAlgorithm[Vector[String], String] with ContextMatch[Vector[String], String]),
+    DiffPatchCombination(
       new MillerMyersDiffAlgorithm[Vector[String], String] with CommonSuffix[Vector[String], String] with CommonPrefix[Vector[String], String] with Context[Vector[String], String],
-      new PatchAlgorithm[Vector[String], String]),
-    new DiffPatchCombination(
+      new PatchAlgorithm[Vector[String], String] with NoMatch[Vector[String], String]),
+    DiffPatchCombination(
+      new MillerMyersDiffAlgorithm[Vector[String], String] with CommonSuffix[Vector[String], String] with CommonPrefix[Vector[String], String] with Context[Vector[String], String],
+      new PatchAlgorithm[Vector[String], String] with ContextMatch[Vector[String], String]),
+    DiffPatchCombination(
       new MyersGreedyDiffAlgorithm[Vector[String], String],
-      new PatchAlgorithm[Vector[String], String]),
-    new DiffPatchCombination(
+      new PatchAlgorithm[Vector[String], String] with NoMatch[Vector[String], String]),
+    DiffPatchCombination(
+      new MyersGreedyDiffAlgorithm[Vector[String], String],
+      new PatchAlgorithm[Vector[String], String] with ContextMatch[Vector[String], String]),
+    DiffPatchCombination(
       new MyersGreedyDiffAlgorithm[Vector[String], String] with CommonPrefix[Vector[String], String],
-      new PatchAlgorithm[Vector[String], String]),
-    new DiffPatchCombination(
+      new PatchAlgorithm[Vector[String], String] with NoMatch[Vector[String], String]),
+    DiffPatchCombination(
+      new MyersGreedyDiffAlgorithm[Vector[String], String] with CommonPrefix[Vector[String], String],
+      new PatchAlgorithm[Vector[String], String] with ContextMatch[Vector[String], String]),
+    DiffPatchCombination(
       new MyersGreedyDiffAlgorithm[Vector[String], String] with CommonSuffix[Vector[String], String],
-      new PatchAlgorithm[Vector[String], String]),
-    new DiffPatchCombination(
+      new PatchAlgorithm[Vector[String], String] with NoMatch[Vector[String], String]),
+    DiffPatchCombination(
+      new MyersGreedyDiffAlgorithm[Vector[String], String] with CommonSuffix[Vector[String], String],
+      new PatchAlgorithm[Vector[String], String] with ContextMatch[Vector[String], String]),
+    DiffPatchCombination(
       new MyersGreedyDiffAlgorithm[Vector[String], String] with CommonSuffix[Vector[String], String] with CommonPrefix[Vector[String], String],
-      new PatchAlgorithm[Vector[String], String]),
-    new DiffPatchCombination(
+      new PatchAlgorithm[Vector[String], String] with NoMatch[Vector[String], String]),
+    DiffPatchCombination(
+      new MyersGreedyDiffAlgorithm[Vector[String], String] with CommonSuffix[Vector[String], String] with CommonPrefix[Vector[String], String],
+      new PatchAlgorithm[Vector[String], String] with ContextMatch[Vector[String], String]),
+    DiffPatchCombination(
       new MyersGreedyDiffAlgorithm[Vector[String], String] with Context[Vector[String], String],
-      new PatchAlgorithm[Vector[String], String]),
-    new DiffPatchCombination(
+      new PatchAlgorithm[Vector[String], String] with NoMatch[Vector[String], String]),
+    DiffPatchCombination(
+      new MyersGreedyDiffAlgorithm[Vector[String], String] with Context[Vector[String], String],
+      new PatchAlgorithm[Vector[String], String] with ContextMatch[Vector[String], String]),
+    DiffPatchCombination(
       new MyersGreedyDiffAlgorithm[Vector[String], String] with CommonPrefix[Vector[String], String] with Context[Vector[String], String],
-      new PatchAlgorithm[Vector[String], String]),
-    new DiffPatchCombination(
+      new PatchAlgorithm[Vector[String], String] with NoMatch[Vector[String], String]),
+    DiffPatchCombination(
+      new MyersGreedyDiffAlgorithm[Vector[String], String] with CommonPrefix[Vector[String], String] with Context[Vector[String], String],
+      new PatchAlgorithm[Vector[String], String] with ContextMatch[Vector[String], String]),
+    DiffPatchCombination(
       new MyersGreedyDiffAlgorithm[Vector[String], String] with CommonSuffix[Vector[String], String] with Context[Vector[String], String],
-      new PatchAlgorithm[Vector[String], String]),
-    new DiffPatchCombination(
+      new PatchAlgorithm[Vector[String], String] with NoMatch[Vector[String], String]),
+    DiffPatchCombination(
+      new MyersGreedyDiffAlgorithm[Vector[String], String] with CommonSuffix[Vector[String], String] with Context[Vector[String], String],
+      new PatchAlgorithm[Vector[String], String] with ContextMatch[Vector[String], String]),
+    DiffPatchCombination(
       new MyersGreedyDiffAlgorithm[Vector[String], String] with CommonSuffix[Vector[String], String] with CommonPrefix[Vector[String], String] with Context[Vector[String], String],
-      new PatchAlgorithm[Vector[String], String]),
-    new DiffPatchCombination(
+      new PatchAlgorithm[Vector[String], String] with NoMatch[Vector[String], String]),
+    DiffPatchCombination(
+      new MyersGreedyDiffAlgorithm[Vector[String], String] with CommonSuffix[Vector[String], String] with CommonPrefix[Vector[String], String] with Context[Vector[String], String],
+      new PatchAlgorithm[Vector[String], String] with ContextMatch[Vector[String], String]),
+    DiffPatchCombination(
       new MyersSpaceOptimizedDiffAlgorithm[Vector[String], String],
-      new PatchAlgorithm[Vector[String], String]),
-    new DiffPatchCombination(
+      new PatchAlgorithm[Vector[String], String] with NoMatch[Vector[String], String]),
+    DiffPatchCombination(
+      new MyersSpaceOptimizedDiffAlgorithm[Vector[String], String],
+      new PatchAlgorithm[Vector[String], String] with ContextMatch[Vector[String], String]),
+    DiffPatchCombination(
       new MyersSpaceOptimizedDiffAlgorithm[Vector[String], String] with CommonPrefix[Vector[String], String],
-      new PatchAlgorithm[Vector[String], String]),
-    new DiffPatchCombination(
+      new PatchAlgorithm[Vector[String], String] with NoMatch[Vector[String], String]),
+    DiffPatchCombination(
+      new MyersSpaceOptimizedDiffAlgorithm[Vector[String], String] with CommonPrefix[Vector[String], String],
+      new PatchAlgorithm[Vector[String], String] with ContextMatch[Vector[String], String]),
+    DiffPatchCombination(
       new MyersSpaceOptimizedDiffAlgorithm[Vector[String], String] with CommonSuffix[Vector[String], String],
-      new PatchAlgorithm[Vector[String], String]),
-    new DiffPatchCombination(
+      new PatchAlgorithm[Vector[String], String] with NoMatch[Vector[String], String]),
+    DiffPatchCombination(
+      new MyersSpaceOptimizedDiffAlgorithm[Vector[String], String] with CommonSuffix[Vector[String], String],
+      new PatchAlgorithm[Vector[String], String] with ContextMatch[Vector[String], String]),
+    DiffPatchCombination(
       new MyersSpaceOptimizedDiffAlgorithm[Vector[String], String] with CommonSuffix[Vector[String], String] with CommonPrefix[Vector[String], String],
-      new PatchAlgorithm[Vector[String], String]),
-    new DiffPatchCombination(
+      new PatchAlgorithm[Vector[String], String] with NoMatch[Vector[String], String]),
+    DiffPatchCombination(
+      new MyersSpaceOptimizedDiffAlgorithm[Vector[String], String] with CommonSuffix[Vector[String], String] with CommonPrefix[Vector[String], String],
+      new PatchAlgorithm[Vector[String], String] with ContextMatch[Vector[String], String]),
+    DiffPatchCombination(
       new MyersSpaceOptimizedDiffAlgorithm[Vector[String], String] with Context[Vector[String], String],
-      new PatchAlgorithm[Vector[String], String]),
-    new DiffPatchCombination(
+      new PatchAlgorithm[Vector[String], String] with NoMatch[Vector[String], String]),
+    DiffPatchCombination(
+      new MyersSpaceOptimizedDiffAlgorithm[Vector[String], String] with Context[Vector[String], String],
+      new PatchAlgorithm[Vector[String], String] with ContextMatch[Vector[String], String]),
+    DiffPatchCombination(
       new MyersSpaceOptimizedDiffAlgorithm[Vector[String], String] with CommonPrefix[Vector[String], String] with Context[Vector[String], String],
-      new PatchAlgorithm[Vector[String], String]),
-    new DiffPatchCombination(
+      new PatchAlgorithm[Vector[String], String] with NoMatch[Vector[String], String]),
+    DiffPatchCombination(
+      new MyersSpaceOptimizedDiffAlgorithm[Vector[String], String] with CommonPrefix[Vector[String], String] with Context[Vector[String], String],
+      new PatchAlgorithm[Vector[String], String] with ContextMatch[Vector[String], String]),
+    DiffPatchCombination(
       new MyersSpaceOptimizedDiffAlgorithm[Vector[String], String] with CommonSuffix[Vector[String], String] with Context[Vector[String], String],
-      new PatchAlgorithm[Vector[String], String]),
-    new DiffPatchCombination(
+      new PatchAlgorithm[Vector[String], String] with NoMatch[Vector[String], String]),
+    DiffPatchCombination(
+      new MyersSpaceOptimizedDiffAlgorithm[Vector[String], String] with CommonSuffix[Vector[String], String] with Context[Vector[String], String],
+      new PatchAlgorithm[Vector[String], String] with ContextMatch[Vector[String], String]),
+    DiffPatchCombination(
       new MyersSpaceOptimizedDiffAlgorithm[Vector[String], String] with CommonSuffix[Vector[String], String] with CommonPrefix[Vector[String], String] with Context[Vector[String], String],
-      new PatchAlgorithm[Vector[String], String])
+      new PatchAlgorithm[Vector[String], String] with NoMatch[Vector[String], String]),
+    DiffPatchCombination(
+      new MyersSpaceOptimizedDiffAlgorithm[Vector[String], String] with CommonSuffix[Vector[String], String] with CommonPrefix[Vector[String], String] with Context[Vector[String], String],
+      new PatchAlgorithm[Vector[String], String] with ContextMatch[Vector[String], String])
   )
-
+  
   /** A combination of a diff and a patch algorithm implementation.
     */
   private object DiffPatchCombination {
-    def simpleTypeName[TType : TypeTag]: String = {
-      val builder = new StringBuilder
-      val value = typeOf[TType].toString
-      var start = 0
-      var depth = 0
-      for (i <- 0 until value.length) value(i) match {
-        case ' ' if depth == 0 =>
-          builder ++= value.substring(start, i)
-          builder += ' '
-          start = i + 1
+    /** Creates a new combination for the specified algorithms.
+      */
+    def apply[
+      TDiff <: DiffAlgorithm[Vector[String], String] : TypeTag,
+      TPatch <: PatchAlgorithm[Vector[String], String] : TypeTag](
+        diffAlgorithm: TDiff,
+        patchAlgorithm: TPatch): DiffPatchCombination = {
+      import Util._
 
-        case '[' if depth == 0 =>
-          builder ++= value.substring(start, i)
-          depth = depth + 1
-
-        case '[' =>
-          depth = depth + 1
-
-        case ']' =>
-          depth = depth - 1
-          start = i + 1
-
-        case '.' =>
-          start = i + 1
-
-        case _ =>
-      }
-
-      builder.result()
+      new DiffPatchCombination(
+        diffAlgorithm,
+        patchAlgorithm,
+        s"${simpleTypeName[TDiff]} and ${simpleTypeName[TPatch]} should diff, patch and unpatch properly")
     }
   }
 
   /** A combination of a diff and a patch algorithm implementation.
     */
-  private case class DiffPatchCombination[
-    TDiff <: DiffAlgorithm[Vector[String], String] : TypeTag,
-    TPatch <: PatchAlgorithm[Vector[String], String] : TypeTag](
-      diffAlgorithm: TDiff,
-      patchAlgorithm: TPatch) {
-    import DiffPatchCombination._
-
-    val name = s"${simpleTypeName[TDiff]} and ${simpleTypeName[TPatch]} should diff, patch and unpatch properly"
-  }
+  private class DiffPatchCombination private(
+      val diffAlgorithm: DiffAlgorithm[Vector[String], String],
+      val patchAlgorithm: PatchAlgorithm[Vector[String], String],
+      val name: String)
 
   private val sourceBuffer = Vector.newBuilder[String]
   private val targetBuffer = Vector.newBuilder[String]
@@ -168,8 +219,8 @@ class RegressionSpec
   this.combinations.foreach { c =>
     test(c.name) {
       val diff = c.diffAlgorithm.diff(source, target)
-      assertResult(target)(c.patchAlgorithm.patch(source, diff).data)
-      assertResult(source)(c.patchAlgorithm.unpatch(target, diff).data)
+      assertResult(target)(c.patchAlgorithm.patch(source, diff).result)
+      assertResult(source)(c.patchAlgorithm.unpatch(target, diff).result)
     }
   }
 }

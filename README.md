@@ -30,7 +30,7 @@ Invoke `patchWith` to apply the hunks to the source (as with `diff` Scala sequen
 scala> source patchWith hunks
 res0: de.digitalistbesser.diff.PatchResult[scala.collection.immutable.Vector[String],String] = PatchResult(Vector(ABC, 123),...)
 ```
-The method returns a `PatchResult` that contains the resulting sequence (which should equal the target) and some additional data (omitted in the example output and not further discussed here).
+The method returns a `PatchResult` that contains the resulting sequence (which should equal the target) and some additional data (omitted in the example output) that is explained below.
 
 The target sequence can also be unpatched by invoking the `unpatchWith` method on the target with the corresponding hunks (although there is no `unpatch` method in Scala sequences the method is named `unpatchWith` in conformance with `patchWith`).
 ```scala
@@ -40,7 +40,9 @@ res1: de.digitalistbesser.diff.PatchResult[scala.collection.immutable.Vector[Str
 The returned `PatchResult` should contain the source sequence.
 
 #### Using Custom Diff and Patch Implementations
-The aforementioned `de.digitalistbesser.diff.default._` import provides a convenient way to create diffs of two sequences. Scaladiff comes with a small set of diff algorithm implementations in the `de.digitalistbesser.diff.algorithms` package that can be instantiated and combined separately.
+The aforementioned `de.digitalistbesser.diff.default._` import provides a convenient way to create diffs of two sequences.
+
+Scaladiff comes with a small set of diff algorithm implementations in the `de.digitalistbesser.diff.algorithms` package that can be instantiated and combined separately.
 
 | Name | Description |
 | --- | --- |
@@ -72,7 +74,36 @@ The first diff algorithm produces two hunks that contain only deletions and inse
 
 The default implementation uses the `MyersSpaceOptimizedDiffAlgorithm` with the `CommonPrefix`, `CommonSuffix` and `Context` traits with their respective default settings.
 
-The sole patch implementation is located in `de.digitalistbesser.diff.PatchAlgorithm`.
+The basic patching/unpatching algorithm is implemented in the abstract `de.digitalistbesser.diff.PatchAlgorithm` class. A trait that provides an implementation for determining the location of a hunk in the source must be mixed-in with the class. Scaladiff provides the following implementations.
+
+| Name | Description |
+| --- | --- |
+| `NoMatch` trait | The location is used as specified in the hunk without any attempt to determine a better location. |
+| `ContextMatch` trait | The hunk's context is used to determine the location starting at the location specified in the hunk. If the hunk doesn't match it is moved one position in front of the starting location, then one position behind it, then two positions before, then two behind, then three before and so on until a match has been found or the permissible portion of the source has been checked. If no match could be found the first and last element of the hunk's context is removed and the whole process is repeated. The number of times the process is repeated is determined by the `maximumFuzz` setting in `ContextMatch` which defaults to 2. If no match could be found after maximum fuzz is exhausted the hunk is rejected and not applied. Otherwise it is applied at the first location that matches. |
+
+A custom implementation is created by instantiating the basic algorithm implementation and one of the available traits.
+```scala
+scala> import de.digitalistbesser.diff.default._
+import de.digitalistbesser.diff.default._
+
+scala> val hunks = "abcdefghijklmnopqrstuvw" diffTo "abcDefghijkLmnopqrsTuvw"
+hunks: Seq[de.digitalistbesser.diff.Hunk[Char]] = List(Hunk(0,0,List(Match(a), Match(b), Match(c), Delete(d), Insert(D), Match(e), Match(f), Match(g))), Hunk(8,8,List(Match(i), Match(j), Match(k), Delete(l), Insert(L), Match(m), Match(n), Match(o))), Hunk(16,16,List(Match(q), Match(r), Match(s), Delete(t), Insert(T), Match(u), Match(v), Match(w))))
+
+scala> import de.digitalistbesser.diff._
+import de.digitalistbesser.diff._
+
+scala> import de.digitalistbesser.diff.algorithms._
+import de.digitalistbesser.diff.algorithms._
+
+scala> val patchAlgorithm = new PatchAlgorithm[String, Char] with ContextMatch[String, Char]
+patchAlgorithm: de.digitalistbesser.diff.PatchAlgorithm[String,Char] with de.digitalistbesser.diff.algorithms.ContextMatch[String,Char] = $anon$1@43f0c2d1
+
+scala> patchAlgorithm.patch("abcdefghpqrstuv", hunks)
+res0: de.digitalistbesser.diff.PatchResult[String,Char] = PatchResult(abcDefghpqrsTux,List(Applied(Hunk(...),ContextOffset(0,0)), Rejected(Hunk(...)), Applied(Hunk(...),ContextOffset(-7,1))))
+```
+The result of the patch operation contains the resulting string and a list with additional information on whether the hunks were applied or rejected. If they could be applied implementation specific data about the location of the hunk is provided. The first hunk of the example could be applied at the specified location so no additional offset and fuzz was necessary. The second hunk was rejected since its context couldn't be matched in the altered source string. The third hunk was applied with an offset of -7 and a fuzz of 1. The offset stems from the removed middle part of the source that caused the rejection of the second hunk. The necessary fuzz is caused by the removed _x_ at the end of the source that is expected by the hunk's full context but ignored after the context is reduced.
+
+The default patch implementation uses the `ContextMatch` trait with its default settings.
 
 #### Diffs for Custom Data
 The diff and patch implementations work on `Seq`. To use the algorithms with custom data structures an implicit conversion that converts the data into a `Seq` must be specified when a diff algorithm is instantiated. A corresponding patch algorithm furthermore needs an implicit `scala.collections.generic.CanBuildFrom` instance for the data type.
@@ -102,7 +133,7 @@ hunks: Seq[de.digitalistbesser.diff.Hunk[Int]] = List(Hunk(0,0,List(Delete(1), M
 scala> Array(1, 2, 3) patchWith hunks
 res0: de.digitalistbesser.diff.PatchResult[Array[Int],Int] = PatchResult([I@39d77de9,...))
 
-scala> res0.data
+scala> res0.result
 res0: Array[Int] = Array(2, 3, 4)
 ```
 
@@ -138,7 +169,6 @@ scala> implicit val ignoreCase = Equiv.fromFunction[Char](_.toLower == _.toLower
 ignoreCase: scala.math.Equiv[Char] = scala.math.Equiv$$anon$4@5dbf5634
 
 scala> "AbC" diffTo "aBc"
-
 res1: Seq[de.digitalistbesser.diff.Hunk[Char]] = List()
 ```
 

@@ -21,9 +21,13 @@ import scala.collection.mutable
 
 /** Defines a patch algorithm.
   */
-class PatchAlgorithm[TData, TElement](implicit
+abstract class PatchAlgorithm[TData, TElement](implicit
     protected val asSeq: AsSeq[TData, TElement],
     protected val asData: AsData[TData, TElement]) {
+  /** Provides implementation specific information on the offset added to a hunk before it is applied to the source.
+    */
+  type Offset <: HunkOffset[TElement]
+
   /** Applies the specified hunks to the data.
     *
     * @param data The source data.
@@ -54,17 +58,20 @@ class PatchAlgorithm[TData, TElement](implicit
         case e => e
       })
 
-    this.computePatch(data, hunks.map(invertHunk)) match { case PatchResult(d, m) =>
+    this.computePatch(data, hunks.map(invertHunk)) match { case PatchResult(r, o) =>
         PatchResult(
-          d,
-          m.map { case (h, r) => (invertHunk(h), r) })
+          r,
+          o.map {
+            case Applied(h, i) => Applied(invertHunk(h), i)
+            case x => x
+          })
     }
   }
 
   /** Computes the patch for the sequence from the specified hunks.
     *
     * @param seq The original sequence.
-    * @param hunks The hunks to unapply.
+    * @param hunks The hunks to apply.
     * @return The result containing the result data and information on the single hunks.
     */
   protected def computePatch(
@@ -73,53 +80,56 @@ class PatchAlgorithm[TData, TElement](implicit
       equiv: Equiv[TElement]): PatchResult[TData, TElement] = {
     @tailrec
     def loop(
-        seq: Seq[TElement],
         hunks: Seq[Hunk[TElement]],
-        offset: Int,
+        minimumIndex: Int,
         builder: mutable.Builder[TElement, TData],
-        results: mutable.Builder[(Hunk[TElement], HunkResult), Map[Hunk[TElement], HunkResult]]): PatchResult[TData, TElement] = hunks match {
+        operations: mutable.Builder[PatchOperation[TElement], Seq[PatchOperation[TElement]]]): PatchResult[TData, TElement] = hunks match {
       case Seq(h @ Hunk(s, _, e), ht @ _*) =>
-        val length = this.computeOffset(seq, e, s + offset)
+        val newMinimumIndex = this.computeOffset(seq, h, minimumIndex)
           .map { o =>
-            builder ++= seq.view(0, o)
+            var index = s + o.offset
+            builder ++= seq.view(minimumIndex, index max 0)
             e.foreach {
               case Insert(l) =>
                 builder += l
 
-              case Match(l) =>
-                builder += l
+              case Match(_) =>
+                if (seq.isDefinedAt(index)) builder += seq(index)
+                index = index + 1
 
               case _ =>
+                index = index + 1
             }
 
-            results += ((h, Applied(o - offset)))
-            o + h.sourceLength
+            operations += Applied(h, o)
+            index
           }
           .getOrElse {
-            results += ((h, Rejected))
-            0
+            operations += Rejected(h)
+            minimumIndex
           }
-        loop(seq.drop(length), ht, offset - length, builder, results)
+        loop(ht, newMinimumIndex, builder, operations)
 
       case _ =>
-        builder ++= seq
+        builder ++= seq.view(minimumIndex, seq.length)
 
-        PatchResult(builder.result(), results.result())
+        PatchResult(builder.result(), operations.result())
     }
 
-    loop(seq, hunks, 0, dataBuilder[TData, TElement], Map.newBuilder[Hunk[TElement], HunkResult])
+    loop(hunks, 0, dataBuilder[TData, TElement], Seq.newBuilder[PatchOperation[TElement]])
   }
 
-  /** Computes the offset of the specified edits in the sequence.
+  /** Determines the position of the hunk in the source sequence and returns the offset between that position
+    * and the hunk's source index.
     *
-    * @param seq The target sequence.
-    * @param edits The edits to apply.
-    * @param offset The initial start offset in the sequence that shall be used for the search of the best fitting offset.
-    * @return The start offset in the sequence or None if the position of the edits cannot be determined.
+    * @param seq The source sequence.
+    * @param hunk The hunk to apply.
+    * @param minimumIndex The minimum index in the sequence that can be used as start of the hunk.
+    * @return The offset to the hunk's source index or None if the position of the hunk cannot be determined.
     */
   protected def computeOffset(
       seq: Seq[TElement],
-      edits: Seq[Edit[TElement]],
-      offset: Int)(implicit
-      equiv: Equiv[TElement]): Option[Int] = Some(offset)
+      hunk: Hunk[TElement],
+      minimumIndex: Int)(implicit
+      equiv: Equiv[TElement]): Option[Offset]
 }
