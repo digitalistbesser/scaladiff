@@ -99,9 +99,9 @@ scala> val patchAlgorithm = new PatchAlgorithm[String, Char] with ContextMatch[S
 patchAlgorithm: de.digitalistbesser.diff.PatchAlgorithm[String,Char] with de.digitalistbesser.diff.algorithms.ContextMatch[String,Char] = $anon$1@43f0c2d1
 
 scala> patchAlgorithm.patch("abcdefghpqrstuv", hunks)
-res0: de.digitalistbesser.diff.PatchResult[String,Char] = PatchResult(abcDefghpqrsTux,List(Applied(Hunk(...),ContextOffset(0,0)), Rejected(Hunk(...)), Applied(Hunk(...),ContextOffset(-7,1))))
+res0: de.digitalistbesser.diff.PatchResult[String,Char] = PatchResult(abcDefghpqrsTuv,List(Applied(Hunk(...),ContextOffset(0,0)), Rejected(Hunk(...)), Applied(Hunk(...),ContextOffset(-7,1))))
 ```
-The result of the patch operation contains the resulting string and a list with additional information on whether the hunks were applied or rejected. If they could be applied implementation specific data about the location of the hunk is provided. The first hunk of the example could be applied at the specified location so no additional offset and fuzz was necessary. The second hunk was rejected since its context couldn't be matched in the altered source string. The third hunk was applied with an offset of -7 and a fuzz of 1. The offset stems from the removed middle part of the source that caused the rejection of the second hunk. The necessary fuzz is caused by the removed _x_ at the end of the source that is expected by the hunk's full context but ignored after the context is reduced.
+The result of the patch operation contains the resulting string and a list with additional information on whether the hunks were applied or rejected. If they could be applied implementation specific data about the location of the hunk is provided. The first hunk of the example could be applied at the specified location so no additional offset and fuzz was necessary. The second hunk was rejected since its context couldn't be matched in the altered source string. The third hunk was applied with an offset of -7 and a fuzz of 1. The offset stems from the removed middle part of the source that caused the rejection of the second hunk. The necessary fuzz is caused by the removed _w_ at the end of the source that is expected by the hunk's full context but ignored after the context is reduced.
 
 The default patch implementation uses the `ContextMatch` trait with its default settings.
 
